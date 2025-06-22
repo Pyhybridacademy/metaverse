@@ -3,16 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
     <title>{% block title %}Admin Panel - {{ site_settings.site_name|default:"Investment Platform" }}{% endblock %}</title>
     
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="{% load static %}{% static 'css/custom.css' %}">
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/custom.css' %}">
     
     <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <!-- CSRF Token for JavaScript -->
+    <script>
+        window.CSRF_TOKEN = "{{ csrf_token }}";
+    </script>
     
     {% block extra_head %}{% endblock %}
 </head>
@@ -49,7 +56,7 @@
     </main>
     
     <!-- JavaScript -->
-    <script src="{% load static %}{% static 'js/main.js' %}"></script>
+    <script src="{% static 'js/main.js' %}"></script>
     {% block extra_js %}{% endblock %}
 </body>
 </html>

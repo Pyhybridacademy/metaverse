@@ -4,64 +4,44 @@ from . import views
 app_name = 'admin_panel'
 
 urlpatterns = [
-    # Authentication
-    path('login/', views.admin_login, name='login'),
-    
-    # Dashboard
-    path('', views.dashboard, name='dashboard'),
-    
-    # User Management
+    path('', views.admin_login, name='admin_login'),
+    path('dashboard/', views.dashboard, name='dashboard'),
     path('users/', views.manage_users, name='manage_users'),
-    path('users/details/<int:user_id>/', views.get_user_details, name='get_user_details'),
-    path('users/edit/<int:user_id>/', views.edit_user, name='edit_user'),
-    path('users/edit-balance/<int:user_id>/', views.edit_balance, name='edit_balance'),
-    path('users/send-message/<int:user_id>/', views.send_message, name='send_message'),
-    path('users/view-transactions/<int:user_id>/', views.view_transactions, name='view_transactions'),
-    path('users/login-as/<int:user_id>/', views.login_as_user, name='login_as_user'),
-    path('users/switch-back-admin/', views.switch_back_admin, name='switch_back_admin'),
-    path('users/suspend/<int:user_id>/', views.suspend_user, name='suspend_user'),
-    path('users/approve-kyc/<int:user_id>/', views.approve_kyc, name='approve_kyc'),
-    path('users/reject-kyc/<int:user_id>/', views.reject_kyc, name='reject_kyc'),
-    
-    # Deposit Management
+    path('users/<int:user_id>/details/', views.get_user_details, name='get_user_details'),
+    path('users/<int:user_id>/edit/', views.edit_user, name='edit_user'),
+    path('users/<int:user_id>/balance/', views.edit_balance, name='edit_balance'),
+    path('users/<int:user_id>/message/', views.send_message, name='send_message'),
+    path('users/<int:user_id>/transactions/', views.view_transactions, name='view_transactions'),
+    path('users/<int:user_id>/login/', views.login_as_user, name='login_as_user'),
+    path('switch-back-admin/', views.switch_back_admin, name='switch_back_admin'),
+    path('users/<int:user_id>/suspend/', views.suspend_user, name='suspend_user'),
+    path('users/<int:user_id>/kyc/approve/', views.approve_kyc, name='approve_kyc'),
+    path('users/<int:user_id>/kyc/reject/', views.reject_kyc, name='reject_kyc'),
     path('deposits/', views.manage_deposits, name='manage_deposits'),
-    path('deposits/approve/<int:deposit_id>/', views.approve_deposit, name='approve_deposit'),
-    path('deposits/reject/<int:deposit_id>/', views.reject_deposit, name='reject_deposit'),
-    
-    # Withdrawal Management
+    path('deposits/<int:deposit_id>/approve/', views.approve_deposit, name='approve_deposit'),
+    path('deposits/<int:deposit_id>/reject/', views.reject_deposit, name='reject_deposit'),
     path('withdrawals/', views.manage_withdrawals, name='manage_withdrawals'),
-    path('withdrawals/approve/<int:withdrawal_id>/', views.approve_withdrawal, name='approve_withdrawal'),
-    
-    # Investment Management
+    path('withdrawals/<int:withdrawal_id>/approve/', views.approve_withdrawal, name='approve_withdrawal'),
     path('investments/', views.manage_investments, name='manage_investments'),
-    path('investments/<int:investment_id>/detail/', views.investment_detail, name='investment_detail'),
     path('investments/add/', views.add_investment, name='add_investment'),
-    path('investments/<int:investment_id>/edit/', views.edit_investment, name='edit_investment'),
+    path('investments/<int:investment_id>/detail/', views.investment_detail, name='investment_detail'),
     path('investments/<int:investment_id>/edit-form/', views.edit_investment_form, name='edit_investment_form'),
+    path('investments/<int:investment_id>/edit/', views.edit_investment, name='edit_investment'),
     path('investments/<int:investment_id>/complete/', views.complete_investment, name='complete_investment'),
     path('investments/<int:investment_id>/cancel/', views.cancel_investment, name='cancel_investment'),
-    path('investments/analytics/', views.investment_analytics, name='investment_analytics'),
-    
-    # Investment Plan Management
     path('investment-plans/', views.manage_investment_plans, name='manage_investment_plans'),
-    path('investment-plans/toggle/<int:plan_id>/', views.toggle_plan_status, name='toggle_plan_status'),
-    path('investment-plans/delete/<int:plan_id>/', views.delete_plan, name='delete_plan'),
-    
-    # Content Management
-    path('testimonials/', views.manage_testimonials, name='manage_testimonials'),
-    path('testimonials/delete/<int:testimonial_id>/', views.delete_testimonial, name='delete_testimonial'),
-    path('testimonials/toggle/<int:testimonial_id>/', views.toggle_testimonial_status, name='toggle_testimonial_status'),
-    
-    path('certifications/', views.manage_certifications, name='manage_certifications'),
-    path('certifications/delete/<int:certification_id>/', views.delete_certification, name='delete_certification'),
-    path('certifications/toggle/<int:certification_id>/', views.toggle_certification_status, name='toggle_certification_status'),
-    
-    # Admin Profile Management
-    path('profile/', views.admin_profile, name='admin_profile'),
-    path('profile/update/', views.update_profile, name='update_profile'),
-    path('profile/change-password/', views.admin_change_password, name='change_password'),
-    
-    # Settings & Reports
+    path('investment-plans/<int:plan_id>/toggle/', views.toggle_plan_status, name='toggle_plan_status'),
+    path('investment-plans/<int:plan_id>/delete/', views.delete_plan, name='delete_plan'),
     path('settings/', views.settings, name='settings'),
     path('reports/', views.reports, name='reports'),
+    path('testimonials/', views.manage_testimonials, name='manage_testimonials'),
+    path('testimonials/<int:testimonial_id>/delete/', views.delete_testimonial, name='delete_testimonial'),
+    path('testimonials/<int:testimonial_id>/toggle/', views.toggle_testimonial_status, name='toggle_testimonial_status'),
+    path('certifications/', views.manage_certifications, name='manage_certifications'),
+    path('certifications/<int:certification_id>/delete/', views.delete_certification, name='delete_certification'),
+    path('certifications/<int:certification_id>/toggle/', views.toggle_certification_status, name='toggle_certification_status'),
+    path('profile/', views.admin_profile, name='admin_profile'),
+    path('profile/update/', views.update_profile, name='update_profile'),
+    path('profile/change-password/', views.admin_change_password, name='admin_change_password'),
+    path('investment-analytics/', views.investment_analytics, name='investment_analytics'),
 ]

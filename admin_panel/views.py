@@ -1,34 +1,17 @@
+import logging
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth import get_user_model, authenticate, login
 from django.db import transaction
-from django.db.models import Sum
+from django.db.models import Sum, Q, Count
 from django.utils import timezone
-from django.http import JsonResponse
-from .decorators import admin_required
-from transactions.models import Deposit, Withdrawal, Investment, Transaction, InvestmentPlan
-from accounts.models import KYCDocument, UserProfile, CustomUser
-from core.models import SiteSettings
-from core.models import SiteSettings, Testimonial, Certification
+from django.http import JsonResponse, HttpResponse
+from django.core.paginator import Paginator, EmptyPage
 from django.core.mail import send_mail
 from django.conf import settings as django_settings
-from django.db import models
-from django.core.paginator import Paginator
-from django.db.models import Q
 from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib.auth import update_session_auth_hash
-from django.contrib import messages
-from django.views.decorators.http import require_http_methods
-from accounts.models import UserProfile
-from .decorators import admin_required
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required, user_passes_test
-from django.contrib import messages
-from django.http import JsonResponse, HttpResponse
-from django.core.paginator import Paginator
-from django.db.models import Q, Sum, Count, Avg
-from django.utils import timezone
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_http_methods, require_POST
 from django.views.decorators.csrf import csrf_exempt
 from datetime import datetime, timedelta
 import json
@@ -36,15 +19,23 @@ import csv
 from io import StringIO
 from openpyxl import Workbook
 from openpyxl.utils import get_column_letter
+from .decorators import admin_required
+from transactions.models import Deposit, Withdrawal, Investment, Transaction, InvestmentPlan
+from accounts.models import KYCDocument, UserProfile, CustomUser
+from core.models import SiteSettings, Testimonial, Certification
+from django.contrib.auth.decorators import login_required, user_passes_test
 
-from accounts.models import CustomUser
-from transactions.models import Investment, InvestmentPlan, Transaction
-from core.models import SiteSettings
+logger = logging.getLogger(__name__)
 
 User = get_user_model()
 
 def is_admin(user):
     return user.is_authenticated and user.is_staff
+
+def get_or_create_profile(user):
+    """Ensure a UserProfile exists for the given user."""
+    profile, created = UserProfile.objects.get_or_create(user=user)
+    return profile
 
 def admin_login(request):
     if request.user.is_authenticated and request.user.is_staff:
@@ -91,17 +82,13 @@ def dashboard(request):
 
 @admin_required
 def manage_users(request):
-    # Get filter parameters
     status_filter = request.GET.get('status')
     search_query = request.GET.get('search')
     date_filter = request.GET.get('date')
     
-    # Base queryset
     users = User.objects.select_related('profile').filter(is_staff=False)
     
-    # Apply filters
     if status_filter == 'pending':
-        # Users with pending KYC or no KYC documents
         users = users.filter(
             Q(kyc_documents__status='pending') | 
             Q(kyc_documents__isnull=True)
@@ -111,7 +98,6 @@ def manage_users(request):
     elif status_filter == 'approved':
         users = users.filter(is_approved=True)
     
-    # Search filter
     if search_query:
         users = users.filter(
             Q(username__icontains=search_query) |
@@ -119,16 +105,17 @@ def manage_users(request):
             Q(full_name__icontains=search_query)
         )
     
-    # Date filter
     if date_filter:
         users = users.filter(date_joined__date=date_filter)
     
     users = users.order_by('-date_joined')
     
-    # Pagination
-    paginator = Paginator(users, 25)  # Show 25 users per page
+    paginator = Paginator(users, 25)
     page_number = request.GET.get('page')
-    users = paginator.get_page(page_number)
+    try:
+        users = paginator.get_page(page_number)
+    except EmptyPage:
+        users = paginator.get_page(1)
     
     context = {
         'users': users,
@@ -142,6 +129,7 @@ def manage_users(request):
 def get_user_details(request, user_id):
     try:
         user = get_object_or_404(User, id=user_id)
+        profile = get_or_create_profile(user)
         transactions = Transaction.objects.filter(user=user).order_by('-created_at')[:10]
         
         user_data = {
@@ -150,8 +138,8 @@ def get_user_details(request, user_id):
             'full_name': user.full_name,
             'email': user.email,
             'profile': {
-                'country': user.profile.country,
-                'account_balance': float(user.profile.account_balance),
+                'country': profile.country,
+                'account_balance': float(profile.account_balance),
             }
         }
         
@@ -168,22 +156,28 @@ def get_user_details(request, user_id):
             'transactions': transactions_data
         })
     except Exception as e:
+        logger.error(f'Error fetching user details for user {user_id}: {str(e)}')
         return JsonResponse({
             'status': 'error',
-            'message': str(e)
+            'message': 'An error occurred while fetching user details.'
         }, status=400)
 
 @admin_required
 def edit_user(request, user_id):
     user = get_object_or_404(User, id=user_id)
     if request.method == 'POST':
-        user.full_name = request.POST.get('full_name')
-        user.email = request.POST.get('email')
-        user.profile.country = request.POST.get('country')
-        user.save()
-        user.profile.save()
-        messages.success(request, f'User {user.username} updated successfully.')
-        return JsonResponse({'status': 'success'})
+        try:
+            user.full_name = request.POST.get('full_name')
+            user.email = request.POST.get('email')
+            profile = get_or_create_profile(user)
+            profile.country = request.POST.get('country')
+            user.save()
+            profile.save()
+            messages.success(request, f'User {user.username} updated successfully.')
+            return JsonResponse({'status': 'success'})
+        except Exception as e:
+            logger.error(f'Error editing user {user_id}: {str(e)}')
+            return JsonResponse({'status': 'error', 'message': 'An error occurred while updating the user.'}, status=400)
     
     return JsonResponse({'status': 'error', 'message': 'Invalid request'}, status=400)
 
@@ -191,24 +185,32 @@ def edit_user(request, user_id):
 def edit_balance(request, user_id):
     user = get_object_or_404(User, id=user_id)
     if request.method == 'POST':
-        with transaction.atomic():
-            new_balance = float(request.POST.get('account_balance'))
-            adjustment_note = request.POST.get('adjustment_note')
-            old_balance = user.profile.account_balance
-            
-            user.profile.account_balance = new_balance
-            user.profile.save()
-            
-            Transaction.objects.create(
-                user=user,
-                transaction_type='bonus' if new_balance > old_balance else 'withdrawal',
-                amount=abs(new_balance - old_balance),
-                description=f'Admin balance adjustment: {adjustment_note}',
-                reference_id=f'admin_adjust_{user.id}'
-            )
-            
-            messages.success(request, f'Balance for {user.username} updated successfully.')
-            return JsonResponse({'status': 'success'})
+        try:
+            with transaction.atomic():
+                new_balance = float(request.POST.get('account_balance'))
+                adjustment_note = request.POST.get('adjustment_note')
+                profile = get_or_create_profile(user)
+                old_balance = profile.account_balance
+                
+                profile.account_balance = new_balance
+                profile.save()
+                
+                Transaction.objects.create(
+                    user=user,
+                    transaction_type='bonus' if new_balance > old_balance else 'withdrawal',
+                    amount=abs(new_balance - old_balance),
+                    description=f'Admin balance adjustment: {adjustment_note}',
+                    reference_id=f'admin_adjust_{user.id}'
+                )
+                
+                messages.success(request, f'Balance for {user.username} updated successfully.')
+                return JsonResponse({'status': 'success'})
+        except ValueError as e:
+            logger.error(f'ValueError editing balance for user {user_id}: {str(e)}')
+            return JsonResponse({'status': 'error', 'message': 'Invalid balance value.'}, status=400)
+        except Exception as e:
+            logger.error(f'Error editing balance for user {user_id}: {str(e)}')
+            return JsonResponse({'status': 'error', 'message': 'An error occurred while updating the balance.'}, status=400)
     
     return JsonResponse({'status': 'error', 'message': 'Invalid request'}, status=400)
 
@@ -233,8 +235,9 @@ def send_message(request, user_id):
             messages.success(request, f'Message sent to {user.username} successfully.')
             return JsonResponse({'status': 'success'})
         except Exception as e:
+            logger.error(f'Error sending message to user {user_id}: {str(e)}')
             messages.error(request, f'Failed to send message: {str(e)}')
-            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+            return JsonResponse({'status': 'error', 'message': 'Failed to send message.'}, status=400)
     
     return JsonResponse({'status': 'error', 'message': 'Invalid request'}, status=400)
 
@@ -255,7 +258,6 @@ def login_as_user(request, user_id):
         messages.error(request, 'Permission denied.')
         return redirect('admin_panel:dashboard')
     
-    # Store admin user ID in session
     request.session['admin_user_id'] = request.user.id
     request.session.modified = True
     
@@ -283,9 +285,9 @@ def switch_back_admin(request):
         request.session.modified = True
         messages.success(request, f'Switched back to admin account: {admin_user.username}.')
         return redirect('admin_panel:dashboard')
-    
-    except User.DoesNotExist:
-        messages.error(request, 'Admin account not found.')
+    except Exception as e:
+        logger.error(f'Error switching back to admin: {str(e)}')
+        messages.error(request, 'An error occurred while switching back to admin.')
         return redirect('core:dashboard')
 
 @admin_required
@@ -309,12 +311,12 @@ def approve_kyc(request, user_id):
                 kyc_doc.status = 'approved'
                 kyc_doc.save()
             
-            # Mark user as verified
             user.is_verified = True
             user.save()
             
             messages.success(request, f'KYC approved for {user.username}')
         except Exception as e:
+            logger.error(f'Error approving KYC for user {user_id}: {str(e)}')
             messages.error(request, f'Error approving KYC: {str(e)}')
     
     return redirect('admin_panel:manage_users')
@@ -331,6 +333,7 @@ def reject_kyc(request, user_id):
             
             messages.success(request, f'KYC rejected for {user.username}')
         except Exception as e:
+            logger.error(f'Error rejecting KYC for user {user_id}: {str(e)}')
             messages.error(request, f'Error rejecting KYC: {str(e)}')
     
     return redirect('admin_panel:manage_users')
@@ -361,7 +364,7 @@ def approve_deposit(request, deposit_id):
             deposit.approved_at = timezone.now()
             deposit.save()
             
-            profile = deposit.user.profile
+            profile = get_or_create_profile(deposit.user)
             profile.account_balance += deposit.amount
             profile.total_deposit += deposit.amount
             profile.save()
@@ -415,7 +418,7 @@ def approve_withdrawal(request, withdrawal_id):
             withdrawal.processed_at = timezone.now()
             withdrawal.save()
             
-            profile = withdrawal.user.profile
+            profile = get_or_create_profile(withdrawal.user)
             profile.account_balance -= withdrawal.amount
             profile.pending_withdrawal -= withdrawal.amount
             profile.total_withdrawal += withdrawal.amount
@@ -425,20 +428,17 @@ def approve_withdrawal(request, withdrawal_id):
     
     return redirect('admin_panel:manage_withdrawals')
 
-# FIXED: Changed all 'created_at' references to 'start_date' for Investment model
 @login_required
 @user_passes_test(is_admin)
 def manage_investments(request):
-    """Display all investments with filtering and pagination"""
+    """Display all investments with filtering and pagination."""
     investments = Investment.objects.select_related('user', 'plan').all()
     
-    # Get filter parameters
     status_filter = request.GET.get('status')
     plan_filter = request.GET.get('plan')
     search_query = request.GET.get('search')
     export_format = request.GET.get('export')
     
-    # Apply filters
     if status_filter:
         investments = investments.filter(status=status_filter)
     
@@ -452,45 +452,34 @@ def manage_investments(request):
             Q(user__full_name__icontains=search_query)
         )
     
-    # Handle export
     if export_format in ['csv', 'excel']:
         return export_investments(investments, export_format)
     
-    # FIXED: Order by start_date instead of created_at
     investments = investments.order_by('-start_date')
     
-    # Calculate statistics
     stats = {
-        'total_investment_amount': investments.aggregate(
-            total=Sum('amount')
-        )['total'] or 0,
+        'total_investment_amount': investments.aggregate(total=Sum('amount'))['total'] or 0,
         'active_investments_count': investments.filter(status='active').count(),
         'completed_investments_count': investments.filter(status='completed').count(),
-        'total_expected_returns': investments.aggregate(
-            total=Sum('expected_return')
-        )['total'] or 0,
+        'total_expected_returns': investments.aggregate(total=Sum('expected_return'))['total'] or 0,
     }
     
-    # Pagination
     paginator = Paginator(investments, 25)
     page_number = request.GET.get('page')
-    investments_page = paginator.get_page(page_number)
+    try:
+        investments_page = paginator.get_page(page_number)
+    except EmptyPage:
+        investments_page = paginator.get_page(1)
     
-    # Add calculated fields to each investment
     for investment in investments_page:
         now = timezone.now()
         total_days = investment.plan.duration_days
         
-        # Calculate days passed from start_date
+        days_passed = 0
         if investment.start_date:
-            if hasattr(investment.start_date, 'date'):
-                start_date = investment.start_date.date()
-            else:
-                start_date = investment.start_date
+            start_date = getattr(investment.start_date, 'date', investment.start_date)()
             days_passed = (now.date() - start_date).days
-        else:
-            days_passed = 0
-            
+        
         days_remaining = max(0, total_days - days_passed)
         progress_percentage = min(100, (days_passed / total_days) * 100) if total_days > 0 else 0
         
@@ -498,7 +487,6 @@ def manage_investments(request):
         investment.days_remaining = days_remaining
         investment.progress_percentage = progress_percentage
     
-    # Get additional data for forms
     investment_plans = InvestmentPlan.objects.filter(is_active=True)
     users = CustomUser.objects.filter(is_active=True, is_staff=False).order_by('username')
     
@@ -506,8 +494,13 @@ def manage_investments(request):
         'investments': investments_page,
         'investment_plans': investment_plans,
         'users': users,
+        'no_plans': not investment_plans.exists(),
+        'no_users': not users.exists(),
         **stats,
     }
+    
+    if not investment_plans.exists() or not users.exists():
+        messages.warning(request, 'No active users or investment plans available. Please create some first.')
     
     return render(request, 'admin_panel/investments.html', context)
 
@@ -524,23 +517,30 @@ def manage_investment_plans(request):
     active_investors = Investment.objects.filter(status='active').values('user').distinct().count()
     
     if request.method == 'POST':
-        plan_id = request.POST.get('plan_id')
-        if plan_id:
-            plan = get_object_or_404(InvestmentPlan, id=plan_id)
-        else:
-            plan = InvestmentPlan()
-        
-        plan.name = request.POST.get('name')
-        plan.minimum_amount = float(request.POST.get('minimum_amount'))
-        plan.maximum_amount = float(request.POST.get('maximum_amount'))
-        plan.roi_percentage = float(request.POST.get('roi_percentage'))
-        plan.duration_days = int(request.POST.get('duration_days'))
-        plan.description = request.POST.get('description')
-        plan.is_active = request.POST.get('is_active') == 'true'
-        plan.save()
-        
-        messages.success(request, f'Investment plan "{plan.name}" saved successfully!')
-        return redirect('admin_panel:manage_investment_plans')
+        try:
+            plan_id = request.POST.get('plan_id')
+            if plan_id:
+                plan = get_object_or_404(InvestmentPlan, id=plan_id)
+            else:
+                plan = InvestmentPlan()
+            
+            plan.name = request.POST.get('name')
+            plan.minimum_amount = float(request.POST.get('minimum_amount'))
+            plan.maximum_amount = float(request.POST.get('maximum_amount'))
+            plan.roi_percentage = float(request.POST.get('roi_percentage'))
+            plan.duration_days = int(request.POST.get('duration_days'))
+            plan.description = request.POST.get('description')
+            plan.is_active = request.POST.get('is_active') == 'true'
+            plan.save()
+            
+            messages.success(request, f'Investment plan "{plan.name}" saved successfully!')
+            return redirect('admin_panel:manage_investment_plans')
+        except ValueError as e:
+            logger.error(f'Error saving investment plan: {str(e)}')
+            messages.error(request, f'Invalid input: {str(e)}')
+        except Exception as e:
+            logger.error(f'Unexpected error saving investment plan: {str(e)}')
+            messages.error(request, 'An error occurred while saving the plan.')
     
     context = {
         'plans': plans,
@@ -552,7 +552,6 @@ def manage_investment_plans(request):
 
 @admin_required
 def settings(request):
-    """Manage site settings"""
     site_settings, created = SiteSettings.objects.get_or_create(id=1)
     
     if request.method == 'POST':
@@ -563,7 +562,6 @@ def settings(request):
             site_settings.eth_wallet = request.POST.get('ethereum_wallet', site_settings.eth_wallet)
             site_settings.usdt_wallet = request.POST.get('usdt_wallet', site_settings.usdt_wallet)
             
-            # Safely handle minimum_deposit and minimum_withdrawal
             minimum_deposit = request.POST.get('minimum_deposit')
             if minimum_deposit:
                 site_settings.minimum_deposit = float(minimum_deposit)
@@ -574,8 +572,12 @@ def settings(request):
             
             site_settings.save()
             messages.success(request, 'Settings updated successfully!')
-        except (ValueError, TypeError) as e:
-            messages.error(request, f'Error updating settings: {str(e)}')
+        except ValueError as e:
+            logger.error(f'Error updating settings: {str(e)}')
+            messages.error(request, f'Invalid input: {str(e)}')
+        except Exception as e:
+            logger.error(f'Unexpected error updating settings: {str(e)}')
+            messages.error(request, 'An error occurred while updating settings.')
         return redirect('admin_panel:settings')
     
     context = {
@@ -585,9 +587,7 @@ def settings(request):
 
 @admin_required
 def reports(request):
-    """Reports and analytics"""
     total_users = User.objects.count()
-    # Count users with approved KYC documents
     verified_users = KYCDocument.objects.filter(status='approved').count()
     total_deposits = Deposit.objects.filter(status='approved').aggregate(Sum('amount'))['amount__sum'] or 0
     total_withdrawals = Withdrawal.objects.filter(status='approved').aggregate(Sum('amount'))['amount__sum'] or 0
@@ -631,72 +631,72 @@ def delete_plan(request, plan_id):
     else:
         plan_name = plan.name
         plan.delete()
-        messages.success(request, f'Investment plan "{plan_name}" has been deleted successfully.')
+        messages.success(request, f'Investment plan "{plan_name}" deleted successfully.')
     
     return redirect('admin_panel:manage_investment_plans')
 
-@admin_required
+@login_required
+@user_passes_test(is_admin)
 def complete_investment(request, investment_id):
-    investment = get_object_or_404(Investment, id=investment_id)
-    
-    if investment.status == 'active':
+    """Mark an investment as completed."""
+    try:
         with transaction.atomic():
+            investment = get_object_or_404(Investment, id=investment_id)
+            if investment.status != 'active':
+                return JsonResponse({'success': False, 'error': 'Investment is not active'}, status=400)
+            
             investment.status = 'completed'
             investment.completed_at = timezone.now()
             investment.save()
             
-            profile = investment.user.profile
-            roi_amount = investment.expected_return - investment.amount
+            profile = get_or_create_profile(investment.user)
             profile.account_balance += investment.expected_return
             profile.current_investment -= investment.amount
             profile.save()
             
             Transaction.objects.create(
                 user=investment.user,
-                transaction_type='roi',
-                amount=roi_amount,
-                description=f'ROI from {investment.plan.name}',
+                transaction_type='return',
+                amount=investment.expected_return,
+                description=f'Return from {investment.plan.name}',
                 reference_id=str(investment.id)
             )
             
-            Transaction.objects.create(
-                user=investment.user,
-                transaction_type='investment',
-                amount=investment.amount,
-                description=f'Investment return - {investment.plan.name}',
-                reference_id=str(investment.id)
-            )
-            
-            messages.success(request, f'Investment completed for {investment.user.username}. ROI of ${roi_amount} added.')
-    
-    return redirect('admin_panel:dashboard')
+            return JsonResponse({'success': True})
+    except Exception as e:
+        logger.error(f'Error completing investment {investment_id}: {str(e)}')
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
 
 @admin_required
 def manage_testimonials(request):
-    """Manage testimonials"""
     testimonials = Testimonial.objects.all().order_by('-created_at')
     
     if request.method == 'POST':
-        testimonial_id = request.POST.get('testimonial_id')
-        if testimonial_id:
-            testimonial = get_object_or_404(Testimonial, id=testimonial_id)
-        else:
-            testimonial = Testimonial()
-        
-        testimonial.name = request.POST.get('name')
-        testimonial.position = request.POST.get('position', '')
-        testimonial.content = request.POST.get('content')
-        testimonial.rating = int(request.POST.get('rating', 5))
-        testimonial.is_active = request.POST.get('is_active') == 'on'
-        
-        if 'avatar' in request.FILES:
-            testimonial.avatar = request.FILES['avatar']
-        
         try:
+            testimonial_id = request.POST.get('testimonial_id')
+            if testimonial_id:
+                testimonial = get_object_or_404(Testimonial, id=testimonial_id)
+            else:
+                testimonial = Testimonial()
+            
+            testimonial.name = request.POST.get('name')
+            testimonial.position = request.POST.get('position', '')
+            testimonial.content = request.POST.get('content')
+            testimonial.rating = int(request.POST.get('rating', 5))
+            testimonial.is_active = request.POST.get('is_active') == 'on'
+            
+            if 'avatar' in request.FILES:
+                testimonial.avatar = request.FILES['avatar']
+            
             testimonial.save()
             messages.success(request, f'Testimonial for "{testimonial.name}" saved successfully!')
         except ValueError as e:
-            messages.error(request, f'Error saving testimonial: {str(e)}')
+            logger.error(f'Error saving testimonial: {str(e)}')
+            messages.error(request, f'Invalid input: {str(e)}')
+        except Exception as e:
+            logger.error(f'Unexpected error saving testimonial: {str(e)}')
+            messages.error(request, 'An error occurred while saving the testimonial.')
         
         return redirect('admin_panel:manage_testimonials')
     
@@ -707,7 +707,6 @@ def manage_testimonials(request):
 
 @admin_required
 def delete_testimonial(request, testimonial_id):
-    """Delete a testimonial"""
     testimonial = get_object_or_404(Testimonial, id=testimonial_id)
     testimonial_name = testimonial.name
     testimonial.delete()
@@ -716,7 +715,6 @@ def delete_testimonial(request, testimonial_id):
 
 @admin_required
 def toggle_testimonial_status(request, testimonial_id):
-    """Toggle testimonial active status"""
     testimonial = get_object_or_404(Testimonial, id=testimonial_id)
     testimonial.is_active = not testimonial.is_active
     testimonial.save()
@@ -726,28 +724,31 @@ def toggle_testimonial_status(request, testimonial_id):
 
 @admin_required
 def manage_certifications(request):
-    """Manage certifications"""
     certifications = Certification.objects.all().order_by('-created_at')
     
     if request.method == 'POST':
-        certification_id = request.POST.get('certification_id')
-        if certification_id:
-            certification = get_object_or_404(Certification, id=certification_id)
-        else:
-            certification = Certification()
-        
-        certification.name = request.POST.get('name')
-        certification.description = request.POST.get('description', '')
-        certification.is_active = request.POST.get('is_active') == 'on'
-        
-        if 'image' in request.FILES:
-            certification.image = request.FILES['image']
-        
         try:
+            certification_id = request.POST.get('certification_id')
+            if certification_id:
+                certification = get_object_or_404(Certification, id=certification_id)
+            else:
+                certification = Certification()
+            
+            certification.name = request.POST.get('name')
+            certification.description = request.POST.get('description', '')
+            certification.is_active = request.POST.get('is_active') == 'on'
+            
+            if 'image' in request.FILES:
+                certification.image = request.FILES['image']
+            
             certification.save()
             messages.success(request, f'Certification "{certification.name}" saved successfully!')
         except ValueError as e:
-            messages.error(request, f'Error saving certification: {str(e)}')
+            logger.error(f'Error saving certification: {str(e)}')
+            messages.error(request, f'Invalid input: {str(e)}')
+        except Exception as e:
+            logger.error(f'Unexpected error saving certification: {str(e)}')
+            messages.error(request, 'An error occurred while saving the certification.')
         
         return redirect('admin_panel:manage_certifications')
     
@@ -758,7 +759,6 @@ def manage_certifications(request):
 
 @admin_required
 def delete_certification(request, certification_id):
-    """Delete a certification"""
     certification = get_object_or_404(Certification, id=certification_id)
     certification_name = certification.name
     certification.delete()
@@ -767,7 +767,6 @@ def delete_certification(request, certification_id):
 
 @admin_required
 def toggle_certification_status(request, certification_id):
-    """Toggle certification active status"""
     certification = get_object_or_404(Certification, id=certification_id)
     certification.is_active = not certification.is_active
     certification.save()
@@ -777,11 +776,7 @@ def toggle_certification_status(request, certification_id):
 
 @admin_required
 def admin_profile(request):
-    """Admin profile page"""
-    try:
-        profile = request.user.profile
-    except UserProfile.DoesNotExist:
-        profile = UserProfile.objects.create(user=request.user)
+    profile = get_or_create_profile(request.user)
     
     context = {
         'profile': profile,
@@ -791,15 +786,12 @@ def admin_profile(request):
 @admin_required
 @require_http_methods(["POST"])
 def update_profile(request):
-    """Update admin profile information"""
     try:
-        # Update user fields
         request.user.full_name = request.POST.get('full_name', '')
         request.user.email = request.POST.get('email', '')
         request.user.save()
         
-        # Update or create profile
-        profile, created = UserProfile.objects.get_or_create(user=request.user)
+        profile = get_or_create_profile(request.user)
         profile.phone_number = request.POST.get('phone_number', '')
         profile.country = request.POST.get('country', '')
         profile.state = request.POST.get('state', '')
@@ -808,6 +800,7 @@ def update_profile(request):
         
         messages.success(request, 'Profile updated successfully!')
     except Exception as e:
+        logger.error(f'Error updating admin profile: {str(e)}')
         messages.error(request, f'Error updating profile: {str(e)}')
     
     return redirect('admin_panel:admin_profile')
@@ -815,12 +808,11 @@ def update_profile(request):
 @admin_required
 @require_http_methods(["POST"])
 def admin_change_password(request):
-    """Change admin password"""
     form = PasswordChangeForm(request.user, request.POST)
     
     if form.is_valid():
         user = form.save()
-        update_session_auth_hash(request, user)  # Keep user logged in
+        update_session_auth_hash(request, user)
         messages.success(request, 'Your password was successfully updated!')
     else:
         for field, errors in form.errors.items():
@@ -832,68 +824,65 @@ def admin_change_password(request):
 @login_required
 @user_passes_test(is_admin)
 def investment_detail(request, investment_id):
-    """Get investment details for modal display"""
-    investment = get_object_or_404(Investment, id=investment_id)
-    
-    # Calculate additional fields
-    now = timezone.now()
-    total_days = investment.plan.duration_days
-    
-    # Calculate days passed from start_date
-    if investment.start_date:
-        if hasattr(investment.start_date, 'date'):
-            start_date = investment.start_date.date()
-        else:
-            start_date = investment.start_date
-        days_passed = (now.date() - start_date).days
-    else:
-        days_passed = 0
+    """Get investment details for modal display."""
+    try:
+        investment = get_object_or_404(Investment, id=investment_id)
         
-    days_remaining = max(0, total_days - days_passed)
-    progress_percentage = min(100, (days_passed / total_days) * 100) if total_days > 0 else 0
-    
-    # Add calculated fields to investment object
-    investment.days_passed = max(0, days_passed)
-    investment.days_remaining = days_remaining
-    investment.progress_percentage = progress_percentage
-    investment.profit = investment.expected_return - investment.amount
-    
-    return render(request, 'admin_panel/investment_detail.html', {
-        'investment': investment
-    })
+        now = timezone.now()
+        total_days = investment.plan.duration_days
+        
+        days_passed = 0
+        if investment.start_date:
+            start_date = getattr(investment.start_date, 'date', investment.start_date)()
+            days_passed = (now.date() - start_date).days
+        
+        days_remaining = max(0, total_days - days_passed)
+        progress_percentage = min(100, (days_passed / total_days) * 100) if total_days > 0 else 0
+        
+        investment.days_passed = max(0, days_passed)
+        investment.days_remaining = days_remaining
+        investment.progress_percentage = progress_percentage
+        investment.profit = investment.expected_return - investment.amount
+        
+        return render(request, 'admin_panel/investment_detail.html', {
+            'investment': investment
+        })
+    except Exception as e:
+        logger.error(f'Error fetching investment details {investment_id}: {str(e)}')
+        return HttpResponse('Error loading investment details.', status=500)
 
 @login_required
 @user_passes_test(is_admin)
 def add_investment(request):
-    """Add new investment"""
-    if request.method == 'POST':
-        try:
+    """Add new investment."""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Invalid request method'}, status=400)
+    
+    try:
+        with transaction.atomic():
             user_id = request.POST.get('user')
             plan_id = request.POST.get('plan')
             amount = float(request.POST.get('amount'))
             start_date = request.POST.get('start_date')
             
-            # Validate inputs
             user = get_object_or_404(CustomUser, id=user_id)
             plan = get_object_or_404(InvestmentPlan, id=plan_id)
             
-            # Validate amount
             if amount < plan.minimum_amount or amount > plan.maximum_amount:
-                messages.error(request, f'Amount must be between ${plan.minimum_amount} and ${plan.maximum_amount}')
-                return redirect('admin_panel:manage_investments')
+                return JsonResponse({'success': False, 'error': f'Amount must be between ${plan.minimum_amount} and ${plan.maximum_amount}'}, status=400)
             
-            # Parse start date
             if start_date:
-                start_date = datetime.strptime(start_date, '%Y-%m-%d')
+                try:
+                    start_date = datetime.strptime(start_date, '%Y-%m-%d')
+                except ValueError:
+                    return JsonResponse({'success': False, 'error': 'Invalid start date format. Use YYYY-MM-DD.'}, status=400)
             else:
                 start_date = timezone.now()
-                
+            
             end_date = start_date + timedelta(days=plan.duration_days)
             
-            # Calculate expected return
             expected_return = amount + (amount * plan.roi_percentage / 100)
             
-            # Create investment
             investment = Investment.objects.create(
                 user=user,
                 plan=plan,
@@ -904,7 +893,6 @@ def add_investment(request):
                 status='active'
             )
             
-            # Create transaction record
             Transaction.objects.create(
                 user=user,
                 transaction_type='investment',
@@ -913,44 +901,55 @@ def add_investment(request):
                 reference_id=str(investment.id)
             )
             
-            # Update user's current investment
-            if hasattr(user, 'profile'):
-                user.profile.current_investment += amount
-                user.profile.account_balance -= amount
-                user.profile.save()
+            profile = get_or_create_profile(user)
+            profile.current_investment += amount
+            profile.account_balance -= amount
+            profile.save()
             
-            messages.success(request, f'Investment created successfully for {user.username}')
-            
-        except Exception as e:
-            messages.error(request, f'Error creating investment: {str(e)}')
+            return JsonResponse({'success': True})
     
-    return redirect('admin_panel:manage_investments')
-
+    except ValueError as e:
+        logger.error(f'ValueError creating investment: {str(e)}')
+        return JsonResponse({'success': False, 'error': f'Invalid input: {str(e)}'}, status=400)
+    except Exception as e:
+        logger.error(f'Unexpected error creating investment: {str(e)}')
+        return JsonResponse({'success': False, 'error': 'An error occurred while creating the investment.'}, status=500)
 @login_required
 @user_passes_test(is_admin)
 def edit_investment_form(request, investment_id):
-    """Get edit investment form for modal display"""
-    investment = get_object_or_404(Investment, id=investment_id)
-    investment_plans = InvestmentPlan.objects.filter(is_active=True)
-    
-    return render(request, 'admin_panel/edit_investment.html', {
-        'investment': investment,
-        'investment_plans': investment_plans
-    })
+    """Get edit investment form for modal display."""
+    try:
+        investment = get_object_or_404(Investment, id=investment_id)
+        investment_plans = InvestmentPlan.objects.filter(is_active=True)
+        
+        context = {
+            'investment': investment,
+            'investment_plans': investment_plans,
+            'no_plans': not investment_plans.exists()
+        }
+        
+        if not investment_plans.exists():
+            messages.warning(request, 'No active investment plans available.')
+        
+        return render(request, 'admin_panel/edit_investment.html', context)
+    except Exception as e:
+        logger.error(f'Error fetching edit investment form {investment_id}: {str(e)}')
+        return HttpResponse('Error loading edit form.', status=500)
 
 @login_required
 @user_passes_test(is_admin)
 def edit_investment(request, investment_id):
-    """Edit existing investment"""
-    if request.method == 'POST':
-        investment = get_object_or_404(Investment, id=investment_id)
-        
-        try:
-            # Get old values for comparison
+    """Edit existing investment."""
+    if request.method != 'POST':
+        return redirect('admin_panel:manage_investments')
+    
+    investment = get_object_or_404(Investment, id=investment_id)
+    
+    try:
+        with transaction.atomic():
             old_amount = investment.amount
             old_status = investment.status
             
-            # Update investment fields
             plan_id = request.POST.get('plan')
             amount = float(request.POST.get('amount'))
             expected_return = float(request.POST.get('expected_return'))
@@ -959,43 +958,54 @@ def edit_investment(request, investment_id):
             end_date = request.POST.get('end_date')
             completed_at = request.POST.get('completed_at')
             
-            # Validate plan
             plan = get_object_or_404(InvestmentPlan, id=plan_id)
             
-            # Parse dates
-            start_date = datetime.strptime(start_date, '%Y-%m-%dT%H:%M')
-            end_date = datetime.strptime(end_date, '%Y-%m-%dT%H:%M')
+            if amount < plan.minimum_amount or amount > plan.maximum_amount:
+                messages.error(request, f'Amount must be between ${plan.minimum_amount} and ${plan.maximum_amount}')
+                return redirect('admin_panel:manage_investments')
             
-            # Update investment
+            try:
+                start_date = datetime.strptime(start_date, '%Y-%m-%dT%H:%M')
+                end_date = datetime.strptime(end_date, '%Y-%m-%dT%H:%M')
+                if completed_at and status == 'completed':
+                    completed_at = datetime.strptime(completed_at, '%Y-%m-%dT%H:%M')
+                else:
+                    completed_at = None
+            except ValueError:
+                messages.error(request, 'Invalid date format. Use YYYY-MM-DDTHH:MM.')
+                return redirect('admin_panel:manage_investments')
+            
+            valid_transitions = {
+                'active': ['completed', 'cancelled'],
+                'completed': [],
+                'cancelled': []
+            }
+            if old_status != status and status not in valid_transitions[old_status]:
+                messages.error(request, f'Invalid status transition from {old_status} to {status}')
+                return redirect('admin_panel:manage_investments')
+            
             investment.plan = plan
             investment.amount = amount
             investment.expected_return = expected_return
             investment.status = status
             investment.start_date = start_date
             investment.end_date = end_date
-            
-            if completed_at and status == 'completed':
-                investment.completed_at = datetime.strptime(completed_at, '%Y-%m-%dT%H:%M')
-            elif status != 'completed':
-                investment.completed_at = None
-            
+            investment.completed_at = completed_at
             investment.save()
             
-            # Update user profile if amount changed
-            if old_amount != amount and hasattr(investment.user, 'profile'):
-                difference = amount - old_amount
-                investment.user.profile.current_investment += difference
-                investment.user.profile.save()
+            profile = get_or_create_profile(investment.user)
             
-            # Handle status changes
-            if old_status != status and hasattr(investment.user, 'profile'):
+            if old_amount != amount:
+                difference = amount - old_amount
+                profile.current_investment += difference
+                profile.save()
+            
+            if old_status != status:
                 if status == 'completed' and old_status == 'active':
-                    # Add returns to user balance
-                    investment.user.profile.account_balance += investment.expected_return
-                    investment.user.profile.current_investment -= investment.amount
-                    investment.user.profile.save()
+                    profile.account_balance += investment.expected_return
+                    profile.current_investment -= investment.amount
+                    profile.save()
                     
-                    # Create transaction record
                     Transaction.objects.create(
                         user=investment.user,
                         transaction_type='roi',
@@ -1003,14 +1013,11 @@ def edit_investment(request, investment_id):
                         description=f'ROI from {investment.plan.name}',
                         reference_id=str(investment.id)
                     )
-                
                 elif status == 'cancelled' and old_status == 'active':
-                    # Refund investment amount
-                    investment.user.profile.account_balance += investment.amount
-                    investment.user.profile.current_investment -= investment.amount
-                    investment.user.profile.save()
+                    profile.account_balance += investment.amount
+                    profile.current_investment -= investment.amount
+                    profile.save()
                     
-                    # Create transaction record
                     Transaction.objects.create(
                         user=investment.user,
                         transaction_type='refund',
@@ -1020,60 +1027,56 @@ def edit_investment(request, investment_id):
                     )
             
             messages.success(request, 'Investment updated successfully')
-            
-        except Exception as e:
-            messages.error(request, f'Error updating investment: {str(e)}')
+    
+    except ValueError as e:
+        logger.error(f'ValueError updating investment {investment_id}: {str(e)}')
+        messages.error(request, f'Invalid input: {str(e)}')
+    except Exception as e:
+        logger.error(f'Unexpected error updating investment {investment_id}: {str(e)}')
+        messages.error(request, 'An error occurred while updating the investment.')
     
     return redirect('admin_panel:manage_investments')
 
 @login_required
 @user_passes_test(is_admin)
-@require_POST
 def cancel_investment(request, investment_id):
-    """Cancel investment"""
+    """Cancel an investment and refund the amount."""
     try:
-        investment = get_object_or_404(Investment, id=investment_id)
-        
-        if investment.status != 'active':
-            return JsonResponse({'success': False, 'error': 'Investment is not active'})
-        
-        # Update investment status
-        investment.status = 'cancelled'
-        investment.save()
-        
-        # Refund investment amount
-        if hasattr(investment.user, 'profile'):
-            investment.user.profile.account_balance += investment.amount
-            investment.user.profile.current_investment -= investment.amount
-            investment.user.profile.save()
-        
-        # Create transaction record
-        Transaction.objects.create(
-            user=investment.user,
-            transaction_type='refund',
-            amount=investment.amount,
-            description=f'Refund for cancelled investment in {investment.plan.name}',
-            reference_id=str(investment.id)
-        )
-        
-        return JsonResponse({'success': True})
-        
+        with transaction.atomic():
+            investment = get_object_or_404(Investment, id=investment_id)
+            if investment.status != 'active':
+                return JsonResponse({'success': False, 'error': 'Investment is not active'}, status=400)
+            
+            investment.status = 'cancelled'
+            investment.completed_at = timezone.now()
+            investment.save()
+            
+            profile = get_or_create_profile(investment.user)
+            profile.account_balance += investment.amount
+            profile.current_investment -= investment.amount
+            profile.save()
+            
+            Transaction.objects.create(
+                user=investment.user,
+                transaction_type='refund',
+                amount=investment.amount,
+                description=f'Refunded from {investment.plan.name}',
+                reference_id=str(investment.id)
+            )
+            
+            return JsonResponse({'success': True})
     except Exception as e:
-        return JsonResponse({'success': False, 'error': str(e)})
-
-# FIXED: Changed all 'created_at' references to 'start_date' for Investment model
+        logger.error(f'Error cancelling investment {investment_id}: {str(e)}')
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+        
 @login_required
 @user_passes_test(is_admin)
 def investment_analytics(request):
-    """Investment analytics dashboard"""
-    # Get time range
     days = int(request.GET.get('days', 30))
     start_date = timezone.now() - timedelta(days=days)
     
-    # FIXED: Get investments within time range using start_date instead of created_at
     investments = Investment.objects.filter(start_date__gte=start_date)
     
-    # Chart data for trends
     chart_data = []
     new_investments_data = []
     completed_investments_data = []
@@ -1084,26 +1087,18 @@ def investment_analytics(request):
         date_str = date.strftime('%Y-%m-%d')
         chart_labels.append(date.strftime('%m/%d'))
         
-        # FIXED: Use start_date instead of created_at
-        new_count = investments.filter(
-            start_date__date=date.date()
-        ).count()
-        
-        completed_count = investments.filter(
-            completed_at__date=date.date()
-        ).count()
+        new_count = investments.filter(start_date__date=date.date()).count()
+        completed_count = investments.filter(completed_at__date=date.date()).count()
         
         new_investments_data.append(new_count)
         completed_investments_data.append(completed_count)
     
-    # Status distribution
     status_distribution = [
         Investment.objects.filter(status='active').count(),
         Investment.objects.filter(status='completed').count(),
         Investment.objects.filter(status='cancelled').count(),
     ]
     
-    # Plan performance
     plan_performance = InvestmentPlan.objects.annotate(
         total_invested=Sum('investment__amount'),
         investment_count=Count('investment')
@@ -1112,13 +1107,11 @@ def investment_analytics(request):
     plan_names = [plan.name for plan in plan_performance]
     plan_amounts = [float(plan.total_invested or 0) for plan in plan_performance]
     
-    # Top investors
     top_investors = CustomUser.objects.annotate(
         total_invested=Sum('investments__amount'),
         active_count=Count('investments', filter=Q(investments__status='active'))
     ).filter(total_invested__isnull=False).order_by('-total_invested')[:10]
     
-    # FIXED: Recent activities using start_date
     recent_investments = Investment.objects.select_related('user', 'plan').order_by('-start_date')[:10]
     recent_activities = []
     
@@ -1150,65 +1143,67 @@ def investment_analytics(request):
     return render(request, 'admin_panel/investment_analytics.html', context)
 
 def export_investments(investments, format_type):
-    """Export investments to CSV or Excel"""
-    if format_type == 'csv':
-        response = HttpResponse(content_type='text/csv')
-        response['Content-Disposition'] = 'attachment; filename="investments.csv"'
-        
-        writer = csv.writer(response)
-        writer.writerow([
-            'ID', 'User', 'Email', 'Plan', 'Amount', 'Expected Return',
-            'Status', 'Start Date', 'End Date', 'Completed At'
-        ])
-        
-        for investment in investments:
+    """Export investments to CSV or Excel."""
+    try:
+        if format_type == 'csv':
+            response = HttpResponse(content_type='text/csv')
+            response['Content-Disposition'] = 'attachment; filename="investments.csv"'
+            
+            writer = csv.writer(response)
             writer.writerow([
-                investment.id,
-                investment.user.full_name or investment.user.username,
-                investment.user.email,
-                investment.plan.name,
-                investment.amount,
-                investment.expected_return,
-                investment.status,
-                investment.start_date,
-                investment.end_date,
-                investment.completed_at or ''
+                'ID', 'User', 'Email', 'Plan', 'Amount', 'Expected Return',
+                'Status', 'Start Date', 'End Date', 'Completed At'
             ])
+            
+            for investment in investments:
+                writer.writerow([
+                    investment.id,
+                    investment.user.full_name or investment.user.username,
+                    investment.user.email,
+                    investment.plan.name,
+                    investment.amount,
+                    investment.expected_return,
+                    investment.status,
+                    investment.start_date,
+                    investment.end_date,
+                    investment.completed_at or ''
+                ])
+            
+            return response
         
-        return response
-    
-    elif format_type == 'excel':
-        response = HttpResponse(
-            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-        )
-        response['Content-Disposition'] = 'attachment; filename="investments.xlsx"'
-        
-        workbook = Workbook()
-        worksheet = workbook.active
-        worksheet.title = 'Investments'
-        
-        # Headers
-        headers = [
-            'ID', 'User', 'Email', 'Plan', 'Amount', 'Expected Return',
-            'Status', 'Start Date', 'End Date', 'Completed At'
-        ]
-        
-        for col_num, header in enumerate(headers, 1):
-            col_letter = get_column_letter(col_num)
-            worksheet[f'{col_letter}1'] = header
-        
-        # Data
-        for row_num, investment in enumerate(investments, 2):
-            worksheet[f'A{row_num}'] = investment.id
-            worksheet[f'B{row_num}'] = investment.user.full_name or investment.user.username
-            worksheet[f'C{row_num}'] = investment.user.email
-            worksheet[f'D{row_num}'] = investment.plan.name
-            worksheet[f'E{row_num}'] = float(investment.amount)
-            worksheet[f'F{row_num}'] = float(investment.expected_return)
-            worksheet[f'G{row_num}'] = investment.status
-            worksheet[f'H{row_num}'] = investment.start_date
-            worksheet[f'I{row_num}'] = investment.end_date
-            worksheet[f'J{row_num}'] = investment.completed_at or ''
-        
-        workbook.save(response)
-        return response
+        elif format_type == 'excel':
+            response = HttpResponse(
+                content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            )
+            response['Content-Disposition'] = 'attachment; filename="investments.xlsx"'
+            
+            workbook = Workbook()
+            worksheet = workbook.active
+            worksheet.title = 'Investments'
+            
+            headers = [
+                'ID', 'User', 'Email', 'Plan', 'Amount', 'Expected Return',
+                'Status', 'Start Date', 'End Date', 'Completed At'
+            ]
+            
+            for col_num, header in enumerate(headers, 1):
+                col_letter = get_column_letter(col_num)
+                worksheet[f'{col_letter}1'] = header
+            
+            for row_num, investment in enumerate(investments, 2):
+                worksheet[f'A{row_num}'] = investment.id
+                worksheet[f'B{row_num}'] = investment.user.full_name or investment.user.username
+                worksheet[f'C{row_num}'] = investment.user.email
+                worksheet[f'D{row_num}'] = investment.plan.name
+                worksheet[f'E{row_num}'] = float(investment.amount)
+                worksheet[f'F{row_num}'] = float(investment.expected_return)
+                worksheet[f'G{row_num}'] = investment.status
+                worksheet[f'H{row_num}'] = investment.start_date
+                worksheet[f'I{row_num}'] = investment.end_date
+                worksheet[f'J{row_num}'] = investment.completed_at or ''
+            
+            workbook.save(response)
+            return response
+    except Exception as e:
+        logger.error(f'Error exporting investments: {str(e)}')
+        return HttpResponse('Error exporting investments.', status=500)
