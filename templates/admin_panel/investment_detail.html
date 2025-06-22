@@ -1,0 +1,145 @@
+<div class="space-y-6">
+    <!-- Investment Overview -->
+    <div class="bg-gray-50 rounded-lg p-4">
+        <h4 class="text-lg font-semibold text-gray-900 mb-4">Investment Overview</h4>
+        <div class="grid grid-cols-2 gap-4">
+            <div>
+                <span class="text-sm text-gray-600">Investment ID:</span>
+                <p class="font-semibold">#{{ investment.id }}</p>
+            </div>
+            <div>
+                <span class="text-sm text-gray-600">Status:</span>
+                <p>
+                    {% if investment.status == 'active' %}
+                        <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Active</span>
+                    {% elif investment.status == 'completed' %}
+                        <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">Completed</span>
+                    {% elif investment.status == 'cancelled' %}
+                        <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">Cancelled</span>
+                    {% endif %}
+                </p>
+            </div>
+            <div>
+                <span class="text-sm text-gray-600">Investment Amount:</span>
+                <p class="font-semibold text-green-600">${{ investment.amount|floatformat:2 }}</p>
+            </div>
+            <div>
+                <span class="text-sm text-gray-600">Expected Return:</span>
+                <p class="font-semibold text-blue-600">${{ investment.expected_return|floatformat:2 }}</p>
+            </div>
+            <div>
+                <span class="text-sm text-gray-600">Profit:</span>
+                <p class="font-semibold text-purple-600">${{ investment.profit|floatformat:2 }}</p>
+            </div>
+            <div>
+                <span class="text-sm text-gray-600">ROI:</span>
+                <p class="font-semibold">{{ investment.plan.roi_percentage }}%</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Information -->
+    <div class="bg-gray-50 rounded-lg p-4">
+        <h4 class="text-lg font-semibold text-gray-900 mb-4">Investor Information</h4>
+        <div class="flex items-center space-x-4">
+            <div class="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center text-white font-medium">
+                {{ investment.user.username|first|upper }}
+            </div>
+            <div>
+                <p class="font-semibold">{{ investment.user.full_name|default:investment.user.username }}</p>
+                <p class="text-sm text-gray-600">{{ investment.user.email }}</p>
+                <p class="text-sm text-gray-600">Joined: {{ investment.user.date_joined|date:"M d, Y" }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Investment Plan Details -->
+    <div class="bg-gray-50 rounded-lg p-4">
+        <h4 class="text-lg font-semibold text-gray-900 mb-4">Plan Details</h4>
+        <div class="grid grid-cols-2 gap-4">
+            <div>
+                <span class="text-sm text-gray-600">Plan Name:</span>
+                <p class="font-semibold">{{ investment.plan.name }}</p>
+            </div>
+            <div>
+                <span class="text-sm text-gray-600">Duration:</span>
+                <p class="font-semibold">{{ investment.plan.duration_days }} days</p>
+            </div>
+            <div>
+                <span class="text-sm text-gray-600">ROI Percentage:</span>
+                <p class="font-semibold">{{ investment.plan.roi_percentage }}%</p>
+            </div>
+            <div>
+                <span class="text-sm text-gray-600">Plan Range:</span>
+                <p class="font-semibold">${{ investment.plan.minimum_amount }} - ${{ investment.plan.maximum_amount }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Timeline -->
+    <div class="bg-gray-50 rounded-lg p-4">
+        <h4 class="text-lg font-semibold text-gray-900 mb-4">Timeline</h4>
+        <div class="grid grid-cols-2 gap-4">
+            <div>
+                <span class="text-sm text-gray-600">Start Date:</span>
+                <p class="font-semibold">{{ investment.start_date|date:"M d, Y H:i" }}</p>
+            </div>
+            <div>
+                <span class="text-sm text-gray-600">End Date:</span>
+                <p class="font-semibold">{{ investment.end_date|date:"M d, Y H:i" }}</p>
+            </div>
+            <div>
+                <span class="text-sm text-gray-600">Days Passed:</span>
+                <p class="font-semibold">{{ investment.days_passed }} days</p>
+            </div>
+            <div>
+                <span class="text-sm text-gray-600">Days Remaining:</span>
+                <p class="font-semibold">{{ investment.days_remaining }} days</p>
+            </div>
+        </div>
+        
+        <!-- Progress Bar -->
+        <div class="mt-4">
+            <div class="flex justify-between text-sm text-gray-600 mb-1">
+                <span>Progress</span>
+                <span>{{ investment.progress_percentage|floatformat:1 }}%</span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-3">
+                <div class="bg-blue-600 h-3 rounded-full transition-all duration-300" 
+                     style="width: {{ investment.progress_percentage }}%"></div>
+            </div>
+        </div>
+    </div>
+
+    {% if investment.completed_at %}
+    <div class="bg-green-50 rounded-lg p-4">
+        <h4 class="text-lg font-semibold text-green-900 mb-2">Completion Details</h4>
+        <p class="text-sm text-green-700">
+            <i class="fas fa-check-circle mr-2"></i>
+            Completed on {{ investment.completed_at|date:"M d, Y H:i" }}
+        </p>
+    </div>
+    {% endif %}
+
+    <!-- Action Buttons -->
+    <div class="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+        {% if investment.status == 'active' %}
+            <button onclick="completeInvestment({{ investment.id }}); closeModal('investmentDetailModal');" 
+                    class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors">
+                <i class="fas fa-check mr-2"></i>Mark Complete
+            </button>
+            <button onclick="cancelInvestment({{ investment.id }}); closeModal('investmentDetailModal');" 
+                    class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors">
+                <i class="fas fa-times mr-2"></i>Cancel Investment
+            </button>
+        {% endif %}
+        <button onclick="editInvestment({{ investment.id }}); closeModal('investmentDetailModal');" 
+                class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
+            <i class="fas fa-edit mr-2"></i>Edit
+        </button>
+        <button onclick="closeModal('investmentDetailModal')" 
+                class="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors">
+            Close
+        </button>
+    </div>
+</div>

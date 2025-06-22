@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Admin Panel - {{ site_settings.site_name|default:"Investment Platform" }}{% endblock %}</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{% load static %}{% static 'css/custom.css' %}">
+    
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Admin Navigation -->
+    {% include 'admin_panel/partials/navbar.html' %}
+    
+    <!-- Admin Sidebar -->
+    {% include 'admin_panel/partials/sidebar.html' %}
+    
+    <!-- Main Content -->
+    <main class="ml-0 lg:ml-64">
+        <!-- Messages -->
+        {% if messages %}
+            <div class="fixed top-4 right-4 z-50 space-y-2">
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} bg-white border-l-4 p-4 rounded shadow-lg max-w-sm
+                        {% if message.tags == 'success' %}border-green-500 text-green-700{% endif %}
+                        {% if message.tags == 'error' %}border-red-500 text-red-700{% endif %}
+                        {% if message.tags == 'warning' %}border-yellow-500 text-yellow-700{% endif %}
+                        {% if message.tags == 'info' %}border-blue-500 text-blue-700{% endif %}">
+                        <div class="flex justify-between items-center">
+                            <span>{{ message }}</span>
+                            <button onclick="this.parentElement.parentElement.remove()" class="ml-2 text-gray-400 hover:text-gray-600">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+        
+        {% block content %}{% endblock %}
+    </main>
+    
+    <!-- JavaScript -->
+    <script src="{% load static %}{% static 'js/main.js' %}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

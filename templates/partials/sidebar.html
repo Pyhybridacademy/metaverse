@@ -1,0 +1,67 @@
+<div id="sidebar" class="fixed inset-y-0 left-0 z-30 w-64 bg-gray-900 transform -translate-x-full transition-transform duration-300 ease-in-out lg:translate-x-0">
+    <div class="flex items-center justify-center h-16 bg-gray-800">
+        <div class="flex items-center space-x-2">
+            {% if site_settings.site_logo %}
+                <img src="{{ site_settings.site_logo.url }}" alt="Logo" class="w-8 h-8">
+            {% else %}
+                <div class="w-8 h-8 bg-blue-500 rounded flex items-center justify-center">
+                    <i class="fas fa-chart-line text-white"></i>
+                </div>
+            {% endif %}
+            <span class="text-white text-lg font-semibold">{{ site_settings.site_name|default:"InvestPro" }}</span>
+        </div>
+    </div>
+    
+    <nav class="mt-8">
+        <div class="px-4 space-y-2">
+            <a href="{% url 'core:dashboard' %}" class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white rounded-lg transition-colors duration-200 {% if request.resolver_match.url_name == 'dashboard' %}bg-gray-700 text-white{% endif %}">
+                <i class="fas fa-tachometer-alt mr-3"></i>
+                Dashboard
+            </a>
+            
+            <a href="{% url 'accounts:profile' %}" class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white rounded-lg transition-colors duration-200 {% if request.resolver_match.url_name == 'profile' %}bg-gray-700 text-white{% endif %}">
+                <i class="fas fa-user mr-3"></i>
+                My Account
+            </a>
+            
+            <div class="space-y-1">
+                <div class="text-gray-400 text-xs uppercase tracking-wider px-4 py-2">Transactions</div>
+                
+                <a href="{% url 'transactions:deposits' %}" class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white rounded-lg transition-colors duration-200 {% if 'deposits' in request.resolver_match.url_name %}bg-gray-700 text-white{% endif %}">
+                    <i class="fas fa-plus-circle mr-3"></i>
+                    Deposits
+                </a>
+                
+                <a href="{% url 'transactions:investments' %}" class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white rounded-lg transition-colors duration-200 {% if 'investments' in request.resolver_match.url_name %}bg-gray-700 text-white{% endif %}">
+                    <i class="fas fa-chart-pie mr-3"></i>
+                    Investments
+                </a>
+                
+                <a href="{% url 'transactions:withdrawals' %}" class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white rounded-lg transition-colors duration-200 {% if 'withdrawals' in request.resolver_match.url_name %}bg-gray-700 text-white{% endif %}">
+                    <i class="fas fa-minus-circle mr-3"></i>
+                    Withdrawals
+                </a>
+                
+                <a href="{% url 'transactions:history' %}" class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white rounded-lg transition-colors duration-200 {% if request.resolver_match.url_name == 'history' %}bg-gray-700 text-white{% endif %}">
+                    <i class="fas fa-history mr-3"></i>
+                    Transaction History
+                </a>
+            </div>
+            
+            <a href="{% url 'accounts:referrals' %}" class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white rounded-lg transition-colors duration-200 {% if request.resolver_match.url_name == 'referrals' %}bg-gray-700 text-white{% endif %}">
+                <i class="fas fa-users mr-3"></i>
+                Referrals
+            </a>
+        </div>
+        
+        <!-- Account Balance Card -->
+        <div class="mx-4 mt-8 p-4 bg-gray-800 rounded-lg">
+            <div class="text-gray-400 text-xs uppercase tracking-wider mb-2">Account Balance</div>
+            <div class="text-white text-2xl font-bold">${{ user.profile.account_balance|floatformat:2 }}</div>
+            <div class="text-gray-400 text-sm mt-1">Available for investment</div>
+        </div>
+    </nav>
+</div>
+
+<!-- Sidebar overlay for mobile -->
+<div id="sidebar-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-20 hidden lg:hidden"></div>

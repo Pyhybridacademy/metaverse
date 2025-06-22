@@ -1,0 +1,24 @@
+{% extends 'admin_panel/base.html' %}
+
+{% block title %}Suspend User - {{ user.username }} - {{ site_settings.site_name|default:"Investment Platform" }}{% endblock %}
+
+{% block page_title %}Suspend User - {{ user.username }}{% endblock %}
+
+{% block content %}
+<div class="pt-16 p-6">
+    <div class="max-w-7xl mx-auto">
+        <div class="bg-white rounded-lg shadow p-6">
+            <h1 class="text-2xl font-bold text-gray-900 mb-4">Suspend User Account</h1>
+            <p class="text-gray-600 mb-6">Are you sure you want to suspend the account for {{ user.username }}? This will prevent them from logging in or performing any actions.</p>
+            
+            <form method="POST" action="{% url 'admin_panel:suspend_user' user.id %}">
+                {% csrf_token %}
+                <div class="flex space-x-4">
+                    <button type="submit" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">Confirm Suspension</button>
+                    <a href="{% url 'admin_panel:manage_users' %}" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

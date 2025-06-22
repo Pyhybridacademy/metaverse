@@ -1,0 +1,64 @@
+<nav class="bg-white shadow-lg fixed top-0 left-0 right-0 z-40 lg:left-64">
+    <div class="px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between h-16">
+            <div class="flex items-center">
+                <!-- Mobile menu button -->
+                <button id="mobile-menu-btn" class="lg:hidden p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100">
+                    <i class="fas fa-bars"></i>
+                </button>
+                
+                <h1 class="ml-4 text-xl font-semibold text-gray-900">
+                    {% block page_title %}Dashboard{% endblock %}
+                </h1>
+            </div>
+            
+            <div class="flex items-center space-x-4">
+                <!-- Currency rates -->
+                <div class="hidden md:flex items-center space-x-4 text-sm text-gray-600">
+                    {% if currency_rates.BTC %}
+                        <span>BTC: ${{ currency_rates.BTC|floatformat:0 }}</span>
+                    {% endif %}
+                    {% if currency_rates.ETH %}
+                        <span>ETH: ${{ currency_rates.ETH|floatformat:0 }}</span>
+                    {% endif %}
+                    {% if currency_rates.USDT %}
+                        <span>USDT: ${{ currency_rates.USDT|floatformat:2 }}</span>
+                    {% endif %}
+                </div>
+                
+                <!-- User menu -->
+                <div class="relative">
+                    <button id="user-menu-btn" class="flex items-center space-x-2 text-gray-700 hover:text-gray-900">
+                        <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
+                            {{ user.username|first|upper }}
+                        </div>
+                        <span class="hidden sm:block">{{ user.username }}</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    
+                    <!-- Dropdown menu -->
+                    <div id="user-menu" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
+                        <a href="{% url 'accounts:profile' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                            <i class="fas fa-user mr-2"></i>Profile
+                        </a>
+                        <a href="{% url 'accounts:wallets' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                            <i class="fas fa-wallet mr-2"></i>Wallets
+                        </a>
+                        {% if user.is_staff %}
+                            <a href="{% url 'admin_panel:admin_dashboard' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                <i class="fas fa-cog mr-2"></i>Admin Panel
+                            </a>
+                        {% endif %}
+                        <div class="border-t border-gray-100"></div>
+                        <a href="{% url 'accounts:logout' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                            <i class="fas fa-sign-out-alt mr-2"></i>Logout
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<!-- Sidebar -->
+{% include 'partials/sidebar.html' %}

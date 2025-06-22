@@ -1,0 +1,756 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}{{ site_settings.site_name|default:"Investment Platform" }} - Secure Investment Solutions{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="bg-gradient-to-br from-blue-900 via-blue-800 to-purple-900 text-white">
+    <div class="container mx-auto px-4 py-20">
+        <div class="max-w-4xl mx-auto text-center">
+            <h1 class="text-5xl md:text-6xl font-bold mb-6 leading-tight">
+                Grow Your Wealth with 
+                <span class="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500">
+                    {{ site_settings.site_name|default:"Smart Investments" }}
+                </span>
+            </h1>
+            <p class="text-xl md:text-2xl mb-8 text-blue-100 leading-relaxed">
+                Join thousands of investors earning consistent returns through our secure, regulated platform with guaranteed ROI up to {{ investment_plans.last.roi_percentage|default:"25" }}%.
+            </p>
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                <a href="{% url 'accounts:register_step1' %}" 
+                   class="inline-flex items-center px-8 py-4 bg-gradient-to-r from-yellow-500 to-orange-500 text-white font-bold rounded-lg hover:from-yellow-600 hover:to-orange-600 transform hover:scale-105 transition-all duration-200 shadow-lg btn-primary">
+                    <i class="fas fa-rocket mr-2"></i>Start Investing Now
+                </a>
+                <a href="#how-it-works" 
+                   class="inline-flex items-center px-8 py-4 border-2 border-white text-white font-semibold rounded-lg hover:bg-white hover:text-blue-900 transition-all duration-200 btn-secondary">
+                    <i class="fas fa-play mr-2"></i>How It Works
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Stats Section -->
+    <div class="border-t border-blue-700 bg-blue-800 bg-opacity-50">
+        <div class="container mx-auto px-4 py-12">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+                <div>
+                    <div class="text-3xl md:text-4xl font-bold text-yellow-400 mb-2">{{ total_invested|floatformat:0|default:"2.5M" }}+</div>
+                    <div class="text-blue-200">Total Invested</div>
+                </div>
+                <div>
+                    <div class="text-3xl md:text-4xl font-bold text-yellow-400 mb-2">{{ total_users|default:"5,000" }}+</div>
+                    <div class="text-blue-200">Active Investors</div>
+                </div>
+                <div>
+                    <div class="text-3xl md:text-4xl font-bold text-yellow-400 mb-2">{{ investment_plans.last.roi_percentage|default:"25" }}%</div>
+                    <div class="text-blue-200">Max ROI</div>
+                </div>
+                <div>
+                    <div class="text-3xl md:text-4xl font-bold text-yellow-400 mb-2">24/7</div>
+                    <div class="text-blue-200">Support</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Investment Plans Section -->
+<section class="py-20 bg-gray-50">
+    <div class="container mx-auto px-4">
+        <div class="text-center mb-16">
+            <h2 class="text-4xl font-bold text-gray-900 mb-4">Choose Your Investment Plan</h2>
+            <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                Select from our carefully crafted plans starting from {{ site_settings.minimum_deposit|default:"100" }} USD, designed to maximize your returns with diversified portfolios.
+            </p>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+            {% for plan in investment_plans %}
+                <div class="bg-white rounded-2xl shadow-xl p-8 border-2 {% if forloop.counter == 2 %}border-yellow-500 scale-105{% else %}border-transparent hover:border-blue-500{% endif %} transition-all duration-300 transform {% if forloop.counter != 2 %}hover:-translate-y-2{% endif %} card-hover relative">
+                    {% if forloop.counter == 2 %}
+                        <div class="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                            <span class="bg-yellow-500 text-white px-4 py-1 rounded-full text-sm font-semibold">Most Popular</span>
+                        </div>
+                    {% endif %}
+                    <div class="text-center mb-8">
+                        <div class="w-16 h-16 bg-{% cycle 'blue' 'yellow' 'purple' %}-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <i class="fas fa-{% cycle 'seedling' 'chart-line' 'crown' %} text-{% cycle 'blue' 'yellow' 'purple' %}-600 text-2xl"></i>
+                        </div>
+                        <h3 class="text-2xl font-bold text-gray-900 mb-2">{{ plan.name }}</h3>
+                        <p class="text-gray-600">{{ plan.description|default:"Ideal for investors" }}</p>
+                    </div>
+                    <div class="space-y-4 mb-8">
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Minimum Investment:</span>
+                            <span class="font-semibold">${{ plan.minimum_amount|floatformat:2 }}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Maximum Investment:</span>
+                            <span class="font-semibold">${{ plan.maximum_amount|floatformat:2 }}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">ROI:</span>
+                            <span class="font-semibold text-green-600">{{ plan.roi_percentage }}%</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Duration:</span>
+                            <span class="font-semibold">{{ plan.duration_days }} days</span>
+                        </div>
+                    </div>
+                    <a href="{% url 'accounts:register_step1' %}" 
+                       class="w-full bg-{% cycle 'blue' 'yellow' 'purple' %}-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-{% cycle 'blue' 'yellow' 'purple' %}-700 transition-colors duration-200 block text-center btn-primary">
+                        Choose Plan
+                    </a>
+                </div>
+            {% empty %}
+                <div class="col-span-3 text-center text-gray-600">No investment plans available at the moment.</div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="py-20 bg-gray-50">
+    <div class="container mx-auto px-4">
+        <div class="text-center mb-16">
+            <h2 class="text-4xl font-bold text-gray-900 mb-4">Why Choose {{ site_settings.site_name|default:"Us" }}</h2>
+            <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                We provide a secure, transparent, and profitable investment platform 
+                backed by years of experience in financial markets.
+            </p>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+            <div class="bg-white rounded-xl p-8 shadow-lg hover:shadow-xl transition-shadow duration-300 card-hover">
+                <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-6">
+                    <i class="fas fa-shield-alt text-blue-600 text-xl"></i>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-900 mb-4">Secure & Licensed</h3>
+                <p class="text-gray-600">Fully regulated with advanced security measures to protect your investments.</p>
+            </div>
+            
+            <div class="bg-white rounded-xl p-8 shadow-lg hover:shadow-xl transition-shadow duration-300 card-hover">
+                <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-6">
+                    <i class="fas fa-chart-line text-green-600 text-xl"></i>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-900 mb-4">Guaranteed Returns</h3>
+                <p class="text-gray-600">Enjoy consistent returns with our proven trading strategies.</p>
+            </div>
+            
+            <div class="bg-white rounded-xl p-8 shadow-lg hover:shadow-xl transition-shadow duration-300 card-hover">
+                <div class="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center mb-6">
+                    <i class="fas fa-clock text-yellow-600 text-xl"></i>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-900 mb-4">24/7 Support</h3>
+                <p class="text-gray-600">Our dedicated support team is available round the clock.</p>
+            </div>
+            
+            <div class="bg-white rounded-xl p-8 shadow-lg hover:shadow-xl transition-shadow duration-300 card-hover">
+                <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-6">
+                    <i class="fas fa-mobile-alt text-purple-600 text-xl"></i>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-900 mb-4">Mobile Friendly</h3>
+                <p class="text-gray-600">Manage your investments on the go with our responsive platform.</p>
+            </div>
+            
+            <div class="bg-white rounded-xl p-8 shadow-lg hover:shadow-xl transition-shadow duration-300 card-hover">
+                <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center mb-6">
+                    <i class="fas fa-bolt text-red-600 text-xl"></i>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-900 mb-4">Instant Withdrawals</h3>
+                <p class="text-gray-600">Withdraw profits instantly with minimal processing time, starting at ${{ site_settings.minimum_withdrawal|floatformat:2 }}.</p>
+            </div>
+            
+            <div class="bg-white rounded-xl p-8 shadow-lg hover:shadow-xl transition-shadow duration-300 card-hover">
+                <div class="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center mb-6">
+                    <i class="fas fa-users text-indigo-600 text-xl"></i>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-900 mb-4">Referral Program</h3>
+                <p class="text-gray-600">Earn {{ site_settings.referral_bonus_percentage }}% commission on referred users’ first deposits.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Testimonials Section -->
+{% if testimonials %}
+<section class="py-20 bg-white">
+    <div class="container mx-auto px-4">
+        <div class="text-center mb-16">
+            <h2 class="text-4xl font-bold text-gray-900 mb-4">What Our Investors Say</h2>
+            <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                Hear from our satisfied investors about their experience with {{ site_settings.site_name|default:"our platform" }}.
+            </p>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+            {% for testimonial in testimonials %}
+                <div class="bg-gray-50 rounded-xl p-8 shadow-lg card-hover">
+                    <div class="flex items-center mb-6">
+                        {% if testimonial.avatar %}
+                            <img src="{{ testimonial.avatar.url }}" alt="{{ testimonial.name }}" class="w-12 h-12 rounded-full mr-4">
+                        {% else %}
+                            <div class="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center mr-4">
+                                <span class="text-gray-600 font-semibold">{{ testimonial.name|first|upper }}</span>
+                            </div>
+                        {% endif %}
+                        <div>
+                            <h4 class="font-semibold text-gray-900">{{ testimonial.name }}</h4>
+                            {% if testimonial.position %}
+                                <p class="text-sm text-gray-600">{{ testimonial.position }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="flex mb-4">
+                        {% for i in "12345"|make_list %}
+                            {% if forloop.counter <= testimonial.rating %}
+                                <i class="fas fa-star text-yellow-400"></i>
+                            {% else %}
+                                <i class="fas fa-star text-gray-300"></i>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                    
+                    <p class="text-gray-700 italic">"{{ testimonial.content|truncatewords:50 }}"</p>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Certifications Section -->
+{% if certifications %}
+<section class="py-20 bg-gray-50">
+    <div class="container mx-auto px-4">
+        <div class="text-center mb-16">
+            <h2 class="text-4xl font-bold text-gray-900 mb-4">Licensed & Certified</h2>
+            <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                We are proud to be recognized by leading financial authorities, ensuring top standards of security and compliance.
+            </p>
+        </div>
+        
+        <div class="flex flex-wrap justify-center items-center gap-8 max-w-4xl mx-auto">
+            {% for cert in certifications %}
+                <div class="bg-white rounded-lg p-6 shadow-lg hover:shadow-xl transition-shadow duration-300 card-hover">
+                    <img src="{{ cert.image.url }}" alt="{{ cert.name }}" class="h-16 w-auto mx-auto">
+                    <p class="text-sm text-gray-600 mt-2 text-center">{{ cert.name }}</p>
+                    {% if cert.description %}
+                        <p class="text-xs text-gray-500 mt-1 text-center">{{ cert.description|truncatewords:10 }}</p>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Team Section -->
+<section class="py-20 bg-white">
+    <div class="container mx-auto px-4">
+        <div class="text-center mb-16">
+            <h2 class="text-4xl font-bold text-gray-900 mb-4">Meet Our Team</h2>
+            <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                Our experienced team of financial experts is dedicated to helping you achieve your investment goals.
+            </p>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+            <!-- Team Member 1 -->
+            <div class="bg-gray-50 rounded-xl p-8 shadow-lg card-hover text-center">
+                <div class="w-24 h-24 bg-gray-300 rounded-full mx-auto mb-4 overflow-hidden">
+                    <img src="{% static 'images/team/john-doe.jpg' %}" alt="John Doe" class="w-full h-full object-cover">
+                </div>
+                <h3 class="text-xl font-semibold text-gray-900 mb-2">John Doe</h3>
+                <p class="text-gray-600 mb-4">Chief Executive Officer</p>
+                <p class="text-gray-500 text-sm">With over 20 years in finance, John leads our strategic vision and growth.</p>
+            </div>
+            
+            <!-- Team Member 2 -->
+            <div class="bg-gray-50 rounded-xl p-8 shadow-lg card-hover text-center">
+                <div class="w-24 h-24 bg-gray-300 rounded-full mx-auto mb-4 overflow-hidden">
+                    <img src="{% static 'images/team/jane-smith.jpg' %}" alt="Jane Smith" class="w-full h-full object-cover">
+                </div>
+                <h3 class="text-xl font-semibold text-gray-900 mb-2">Jane Smith</h3>
+                <p class="text-gray-600 mb-4">Chief Investment Officer</p>
+                <p class="text-gray-500 text-sm">Jane oversees our investment strategies, ensuring optimal returns.</p>
+            </div>
+            
+            <!-- Team Member 3 -->
+            <div class="bg-gray-50 rounded-xl p-8 shadow-lg card-hover text-center">
+                <div class="w-24 h-24 bg-gray-300 rounded-full mx-auto mb-4 overflow-hidden">
+                    <img src="{% static 'images/team/mark-johnson.jpg' %}" alt="Mark Johnson" class="w-full h-full object-cover">
+                </div>
+                <h3 class="text-xl font-semibold text-gray-900 mb-2">Mark Johnson</h3>
+                <p class="text-gray-600 mb-4">Head of Technology</p>
+                <p class="text-gray-500 text-sm">Mark ensures our platform is secure, reliable, and user-friendly.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- How It Works Section -->
+<section id="how-it-works" class="py-20 bg-white">
+    <div class="container mx-auto px-4">
+        <div class="text-center mb-16">
+            <h2 class="text-4xl font-bold text-gray-900 mb-4">How It Works</h2>
+            <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                Start your investment journey in just a few simple steps with our secure and user-friendly platform.
+            </p>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-8 max-w-6xl mx-auto">
+            <div class="text-center fade-in">
+                <div class="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <span class="text-2xl font-bold text-blue-600">1</span>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-900 mb-4">Create Account</h3>
+                <p class="text-gray-600">Sign up with your email and complete our secure KYC verification process.</p>
+            </div>
+            <div class="text-center fade-in">
+                <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <span class="text-2xl font-bold text-green-600">2</span>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-900 mb-4">Make Deposit</h3>
+                <p class="text-gray-600">Fund your account with a minimum of ${{ site_settings.minimum_deposit|floatformat:2 }} using Bitcoin, USDT, or Ethereum.</p>
+            </div>
+            <div class="text-center fade-in">
+                <div class="w-20 h-20 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <span class="text-2xl font-bold text-yellow-600">3</span>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-900 mb-4">Choose Plan</h3>
+                <p class="text-gray-600">Select an investment plan tailored to your financial goals and risk tolerance.</p>
+            </div>
+            <div class="text-center fade-in">
+                <div class="w-20 h-20 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <span class="text-2xl font-bold text-purple-600">4</span>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-900 mb-4">Earn Returns</h3>
+                <p class="text-gray-600">Watch your investment grow and withdraw profits after {{ site_settings.minimum_withdrawal|floatformat:2 }} USD.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="py-20 bg-gray-50">
+    <div class="container mx-auto px-4">
+        <div class="text-center mb-16">
+            <h2 class="text-4xl font-bold text-gray-900 mb-4">Why Choose {{ site_settings.site_name|default:"Us" }}</h2>
+            <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                Our platform offers secure, transparent, and profitable investment opportunities backed by industry expertise.
+            </p>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+            <div class="bg-white rounded-xl p-8 shadow-lg hover:shadow-xl transition-shadow duration-300 card-hover">
+                <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-6">
+                    <i class="fas fa-shield-alt text-blue-600 text-xl"></i>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-900 mb-4">Secure & Licensed</h3>
+                <p class="text-gray-600">Regulated platform with advanced encryption and insurance for your investments.</p>
+            </div>
+            <div class="bg-white rounded-xl p-8 shadow-lg hover:shadow-xl transition-shadow duration-300 card-hover">
+                <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-6">
+                    <i class="fas fa-chart-line text-green-600 text-xl"></i>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-900 mb-4">Guaranteed Returns</h3>
+                <p class="text-gray-600">Proven strategies deliver consistent ROI up to {{ investment_plans.last.roi_percentage|default:"25" }}%.</p>
+            </div>
+            <div class="bg-white rounded-xl p-8 shadow-lg hover:shadow-xl transition-shadow duration-300 card-hover">
+                <div class="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center mb-6">
+                    <i class="fas fa-clock text-yellow-600 text-xl"></i>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-900 mb-4">24/7 Support</h3>
+                <p class="text-gray-600">Round-the-clock assistance via live chat, email, or phone at {{ site_settings.contact_phone|default:"support" }}.</p>
+            </div>
+            <div class="bg-white rounded-xl p-8 shadow-lg hover:shadow-xl transition-shadow duration-300 card-hover">
+                <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-6">
+                    <i class="fas fa-mobile-alt text-purple-600 text-xl"></i>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-900 mb-4">Mobile Friendly</h3>
+                <p class="text-gray-600">Manage your portfolio on-the-go with our responsive platform.</p>
+            </div>
+            <div class="bg-white rounded-xl p-8 shadow-lg hover:shadow-xl transition-shadow duration-300 card-hover">
+                <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center mb-6">
+                    <i class="fas fa-bolt text-red-600 text-xl"></i>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-900 mb-4">Instant Withdrawals</h3>
+                <p class="text-gray-600">Withdraw profits starting at ${{ site_settings.minimum_withdrawal|floatformat:2 }} with fast processing.</p>
+            </div>
+            <div class="bg-white rounded-xl p-8 shadow-lg hover:shadow-xl transition-shadow duration-300 card-hover">
+                <div class="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center mb-6">
+                    <i class="fas fa-users text-indigo-600 text-xl"></i>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-900 mb-4">Referral Program</h3>
+                <p class="text-gray-600">Earn {{ site_settings.referral_bonus_percentage|floatformat:2 }}% commission on referred deposits.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Testimonials Section -->
+{% if testimonials %}
+<section class="py-20 bg-white">
+    <div class="container mx-auto px-4">
+        <div class="text-center mb-16">
+            <h2 class="text-4xl font-bold text-gray-900 mb-4">What Our Investors Say</h2>
+            <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                Hear from our satisfied investors about their experience with {{ site_settings.site_name|default:"us" }}.
+            </p>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+            {% for testimonial in testimonials %}
+                <div class="bg-gray-50 rounded-xl p-8 shadow-lg card-hover slide-up">
+                    <div class="flex items-center mb-6">
+                        {% if testimonial.avatar %}
+                            <img src="{{ testimonial.avatar.url }}" alt="{{ testimonial.name }}" class="w-12 h-12 rounded-full mr-4">
+                        {% else %}
+                            <div class="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center mr-4">
+                                <span class="text-gray-600 font-semibold">{{ testimonial.name|first|upper }}</span>
+                            </div>
+                        {% endif %}
+                        <div>
+                            <h4 class="font-semibold text-gray-900">{{ testimonial.name }}</h4>
+                            {% if testimonial.position %}
+                                <p class="text-sm text-gray-600">{{ testimonial.position }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="flex mb-4">
+                        {% for i in "12345"|make_list %}
+                            {% if forloop.counter <= testimonial.rating %}
+                                <i class="fas fa-star text-yellow-400"></i>
+                            {% else %}
+                                <i class="fas fa-star text-gray-300"></i>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                    <p class="text-gray-700 italic">"{{ testimonial.content|truncatewords:50 }}"</p>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Certifications Section -->
+{% if certifications %}
+<section class="py-20 bg-gray-50">
+    <div class="container mx-auto px-4">
+        <div class="text-center mb-16">
+            <h2 class="text-4xl font-bold text-gray-900 mb-4">Licensed & Certified</h2>
+            <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                Our platform is trusted and certified by leading financial authorities, ensuring compliance and security.
+            </p>
+        </div>
+        <div class="flex flex-wrap justify-center items-center gap-8 max-w-4xl mx-auto">
+            {% for cert in certifications %}
+                <div class="bg-white rounded-lg p-6 shadow-lg hover:shadow-xl transition-shadow duration-300 card-hover">
+                    <img src="{{ cert.image.url }}" alt="{{ cert.name }}" class="h-16 w-auto mx-auto">
+                    <p class="text-sm text-gray-600 mt-2 text-center">{{ cert.name }}</p>
+                    {% if cert.description %}
+                        <p class="text-xs text-gray-500 mt-1 text-center">{{ cert.description|truncatewords:10 }}</p>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- FAQ Section -->
+<section id="faq" class="py-20 bg-white">
+    <div class="container mx-auto px-4">
+        <div class="text-center mb-16">
+            <h2 class="text-4xl font-bold text-gray-900 mb-4">Frequently Asked Questions</h2>
+            <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                Got questions? We've got answers about investing with {{ site_settings.site_name|default:"us" }}.
+            </p>
+        </div>
+        <div class="max-w-3xl mx-auto space-y-4">
+            <div class="bg-gray-50 rounded-lg p-6 shadow-sm">
+                <button class="w-full flex justify-between items-center text-left text-lg font-semibold text-gray-900 focus:outline-none faq-toggle">
+                    What is the minimum investment amount?
+                    <i class="fas fa-chevron-down text-gray-600"></i>
+                </button>
+                <div class="mt-4 text-gray-600 hidden faq-content">
+                    The minimum investment amount is ${{ site_settings.minimum_deposit|floatformat:2 }}. You can start with any of our plans to suit your budget.
+                </div>
+            </div>
+            <div class="bg-gray-50 rounded-lg p-6 shadow-sm">
+                <button class="w-full flex justify-between items-center text-left text-lg font-semibold text-gray-900 focus:outline-none faq-toggle">
+                    How secure is my investment?
+                    <i class="fas fa-chevron-down text-gray-600"></i>
+                </button>
+                <div class="mt-4 text-gray-600 hidden faq-content">
+                    Your investments are protected by advanced encryption, multi-factor authentication, and insurance. We are fully licensed and regulated.
+                </div>
+            </div>
+            <div class="bg-gray-50 rounded-lg p-6 shadow-sm">
+                <button class="w-full flex justify-between items-center text-left text-lg font-semibold text-gray-900 focus:outline-none faq-toggle">
+                    How can I withdraw my profits?
+                    <i class="fas fa-chevron-down text-gray-600"></i>
+                </button>
+                <div class="mt-4 text-gray-600 hidden faq-content">
+                    You can withdraw profits starting at ${{ site_settings.minimum_withdrawal|floatformat:2 }} to your cryptocurrency wallet or bank account after the investment period.
+                </div>
+            </div>
+            <div class="bg-gray-50 rounded-lg p-6 shadow-sm">
+                <button class="w-full flex justify-between items-center text-left text-lg font-semibold text-gray-900 focus:outline-none faq-toggle">
+                    What is the referral program?
+                    <i class="fas fa-chevron-down text-gray-600"></i>
+                </button>
+                <div class="mt-4 text-gray-600 hidden faq-content">
+                    Earn a {{ site_settings.referral_bonus_percentage|floatformat:2 }}% commission on the first deposit of anyone you refer to our platform.
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Security Features Section -->
+<section class="py-20 bg-gray-50">
+    <div class="container mx-auto px-4">
+        <div class="text-center mb-16">
+            <h2 class="text-4xl font-bold text-gray-900 mb-4">Uncompromising Security</h2>
+            <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                Your peace of mind is our priority. We employ state-of-the-art security measures to protect your investments.
+            </p>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+            <div class="flex items-start space-x-4">
+                <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-lock text-blue-600 text-xl"></i>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-900 mb-2">Advanced Encryption</h3>
+                    <p class="text-gray-600">All data is encrypted with 256-bit AES, ensuring your information remains secure.</p>
+                </div>
+            </div>
+            <div class="flex items-start space-x-4">
+                <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-user-shield text-blue-600 text-xl"></i>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-900 mb-2">KYC & AML Compliance</h3>
+                    <p class="text-gray-600">We adhere to strict KYC and AML regulations to prevent fraud and ensure safety.</p>
+                </div>
+            </div>
+            <div class="flex items-start space-x-4">
+                <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-shield-alt text-blue-600 text-xl"></i>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-900 mb-2">Insurance Protection</h3>
+                    <p class="text-gray-600">Your investments are backed by insurance to safeguard against unforeseen risks.</p>
+                </div>
+            </div>
+            <div class="flex items-start space-x-4">
+                <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-server text-blue-600 text-xl"></i>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-900 mb-2">Secure Infrastructure</h3>
+                    <p class="text-gray-600">Hosted on redundant, high-availability servers with DDoS protection.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Blog Preview Section -->
+<section class="py-20 bg-white">
+    <div class="container mx-auto px-4">
+        <div class="text-center mb-16">
+            <h2 class="text-4xl font-bold text-gray-900 mb-4">Latest Insights</h2>
+            <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                Stay informed with our latest articles on investment strategies and market trends.
+            </p>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+            <!-- Placeholder blog posts; replace with actual Blog model if available -->
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden card-hover">
+                <img src="https://via.placeholder.com/400x200" alt="Blog Post" class="w-full h-48 object-cover">
+                <div class="p-6">
+                    <h3 class="text-xl font-semibold text-gray-900 mb-2">Top 5 Investment Tips for 2025</h3>
+                    <p class="text-gray-600 mb-4">Learn how to maximize your returns with our expert tips for the new year.</p>
+                    <a href="#" class="text-blue-600 font-semibold hover:underline">Read More</a>
+                </div>
+            </div>
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden card-hover">
+                <img src="https://via.placeholder.com/400x200" alt="Blog Post" class="w-full h-48 object-cover">
+                <div class="p-6">
+                    <h3 class="text-xl font-semibold text-gray-900 mb-2">Understanding Cryptocurrency Investments</h3>
+                    <p class="text-gray-600 mb-4">A beginner's guide to investing in Bitcoin, Ethereum, and USDT.</p>
+                    <a href="#" class="text-blue-600 font-semibold hover:underline">Read More</a>
+                </div>
+            </div>
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden card-hover">
+                <img src="https://via.placeholder.com/400x200" alt="Blog Post" class="w-full h-48 object-cover">
+                <div class="p-6">
+                    <h3 class="text-xl font-semibold text-gray-900 mb-2">Diversifying Your Portfolio</h3>
+                    <p class="text-gray-600 mb-4">Why diversification is key to reducing risk and increasing returns.</p>
+                    <a href="#" class="text-blue-600 font-semibold hover:underline">Read More</a>
+                </div>
+            </div>
+        </div>
+        <div class="text-center mt-12">
+            <a href="#" class="inline-flex items-center px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 btn-primary">
+                View All Articles
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="py-20 bg-gradient-to-r from-blue-600 to-purple-600 text-white">
+    <div class="container mx-auto px-4 text-center">
+        <h2 class="text-4xl font-bold mb-6">Ready to Start Your Investment Journey?</h2>
+        <p class="text-xl mb-8 max-w-2xl mx-auto">
+            Join {{ total_users|default:"thousands" }} investors earning up to {{ investment_plans.last.roi_percentage|default:"25" }}% ROI. Start with just ${{ site_settings.minimum_deposit|floatformat:2 }}.
+        </p>
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+            <a href="{% url 'accounts:register_step1' %}" 
+               class="inline-flex items-center px-8 py-4 bg-white text-blue-600 font-bold rounded-lg hover:bg-gray-100 transform hover:scale-105 transition-all duration-200 shadow-lg btn-primary">
+                <i class="fas fa-user-plus mr-2"></i>Create Free Account
+            </a>
+            <a href="#contact" 
+               class="inline-flex items-center px-8 py-4 border-2 border-white text-white font-semibold rounded-lg hover:bg-white hover:text-blue-600 transition-all duration-200 btn-secondary">
+                <i class="fas fa-phone mr-2"></i>Contact Us
+            </a>
+        </div>
+        <div class="mt-12 grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+            <div class="text-center">
+                <div class="text-2xl font-bold text-yellow-400 mb-2">No Hidden Fees</div>
+                <p class="text-blue-100">Transparent pricing with no surprises.</p>
+            </div>
+            <div class="text-center">
+                <div class="text-2xl font-bold text-yellow-400 mb-2">Instant Setup</div>
+                <p class="text-blue-100">Get started in less than 5 minutes.</p>
+            </div>
+            <div class="text-center">
+                <div class="text-2xl font-bold text-yellow-400 mb-2">Money Back Guarantee</div>
+                <p class="text-blue-100">30-day money back guarantee for peace of mind.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Footer -->
+<footer id="contact" class="bg-gray-900 text-white py-12">
+    <div class="container mx-auto px-4">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+            <div>
+                <div class="flex items-center mb-4">
+                    {% if site_settings.site_logo %}
+                        <img src="{{ site_settings.site_logo.url }}" alt="Logo" class="w-8 h-8 mr-2">
+                    {% else %}
+                        <div class="w-8 h-8 bg-blue-500 rounded flex items-center justify-center mr-2">
+                            <i class="fas fa-chart-line text-white"></i>
+                        </div>
+                    {% endif %}
+                    <span class="text-xl font-bold">{{ site_settings.site_name|default:"InvestPro" }}</span>
+                </div>
+                <p class="text-gray-400 mb-4">
+                    Your trusted partner for secure and profitable investments since {{ "now"|date:"Y" }}.
+                </p>
+                <div class="flex space-x-4">
+                    <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                        <i class="fab fa-facebook-f"></i>
+                    </a>
+                    <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                        <i class="fab fa-twitter"></i>
+                    </a>
+                    <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                        <i class="fab fa-linkedin-in"></i>
+                    </a>
+                    <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                        <i class="fab fa-telegram"></i>
+                    </a>
+                </div>
+            </div>
+            <div>
+                <h3 class="text-lg font-semibold mb-4">Quick Links</h3>
+                <ul class="space-y-2">
+                    <li><a href="#" class="text-gray-400 hover:text-white transition-colors">About Us</a></li>
+                    <li><a href="#how-it-works" class="text-gray-400 hover:text-white transition-colors">How It Works</a></li>
+                    <li><a href="#investment-plans" class="text-gray-400 hover:text-white transition-colors">Investment Plans</a></li>
+                    <li><a href="#faq" class="text-gray-400 hover:text-white transition-colors">FAQ</a></li>
+                    <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Blog</a></li>
+                </ul>
+            </div>
+            <div>
+                <h3 class="text-lg font-semibold mb-4">Legal</h3>
+                <ul class="space-y-2">
+                    <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Terms of Service</a></li>
+                    <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Privacy Policy</a></li>
+                    <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Risk Disclosure</a></li>
+                    <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Refund Policy</a></li>
+                    <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Compliance</a></li>
+                </ul>
+            </div>
+            <div>
+                <h3 class="text-lg font-semibold mb-4">Contact Info</h3>
+                <ul class="space-y-2 text-gray-400">
+                    <li class="flex items-center">
+                        <i class="fas fa-envelope mr-2"></i>
+                        {{ site_settings.contact_email|default:"support@investpro.com" }}
+                    </li>
+                    {% if site_settings.contact_phone %}
+                        <li class="flex items-center">
+                            <i class="fas fa-phone mr-2"></i>
+                            {{ site_settings.contact_phone }}
+                        </li>
+                    {% endif %}
+                    <li class="flex items-center">
+                        <i class="fas fa-clock mr-2"></i>
+                        24/7 Customer Support
+                    </li>
+                </ul>
+                <div class="mt-6">
+                    <h4 class="font-semibold mb-2">Newsletter</h4>
+                    <form id="newsletter-form" class="flex">
+                        <input type="email" name="email" placeholder="Your email" class="flex-1 px-3 py-2 bg-gray-800 border border-gray-700 rounded-l-lg focus:outline-none focus:border-blue-500 form-input" required>
+                        <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-r-lg hover:bg-blue-700 transition-colors btn-primary">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
+            <p>© {{ "now"|date:"Y" }} {{ site_settings.site_name|default:"InvestPro" }}. All rights reserved.</p>
+            <p class="mt-2 text-sm">
+                Investment involves risk. Past performance is not indicative of future results. Please invest responsibly.
+            </p>
+        </div>
+    </div>
+</footer>
+
+<script>
+// Smooth scrolling for anchor links
+document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    anchor.addEventListener('click', function(e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+            target.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start'
+            });
+        }
+    });
+});
+
+// FAQ toggle functionality
+document.querySelectorAll('.faq-toggle').forEach(button => {
+    button.addEventListener('click', () => {
+        const content = button.nextElementSibling;
+        const icon = button.querySelector('i');
+        content.classList.toggle('hidden');
+        icon.classList.toggle('fa-chevron-down');
+        icon.classList.toggle('fa-chevron-up');
+    });
+});
+</script>
+{% endblock %}

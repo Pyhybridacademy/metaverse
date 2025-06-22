@@ -1,0 +1,166 @@
+{% extends 'base.html' %}
+
+{% block title %}My Investments - {{ site_settings.site_name|default:"Investment Platform" }}{% endblock %}
+
+{% block page_title %}My Investments{% endblock %}
+
+{% block content %}
+<div class="pt-16 p-6">
+    <div class="max-w-6xl mx-auto">
+        <!-- Page Header -->
+        <div class="flex justify-between items-center mb-8">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900">My Investments</h1>
+                <p class="text-gray-600">Track your investment portfolio and returns</p>
+            </div>
+            <a href="{% url 'transactions:new_investment' %}" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700">
+                <i class="fas fa-plus mr-2"></i>New Investment
+            </a>
+        </div>
+        
+        <!-- Investment Stats -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center">
+                    <div class="p-3 bg-blue-100 rounded-lg">
+                        <i class="fas fa-chart-pie text-blue-600"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-600">Active Investments</p>
+                        <p class="text-2xl font-bold text-gray-900">{{ investments|length }}</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center">
+                    <div class="p-3 bg-green-100 rounded-lg">
+                        <i class="fas fa-dollar-sign text-green-600"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-600">Total Invested</p>
+                        <p class="text-2xl font-bold text-gray-900">${{ user.profile.current_investment|floatformat:2 }}</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center">
+                    <div class="p-3 bg-purple-100 rounded-lg">
+                        <i class="fas fa-chart-line text-purple-600"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-600">Expected Returns</p>
+                        <p class="text-2xl font-bold text-gray-900">
+                            ${% widthratio investments.0.expected_return 1 1 %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center">
+                    <div class="p-3 bg-yellow-100 rounded-lg">
+                        <i class="fas fa-percentage text-yellow-600"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-600">Avg. ROI</p>
+                        <p class="text-2xl font-bold text-gray-900">15.5%</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Investments List -->
+        <div class="bg-white rounded-lg shadow">
+            {% if investments %}
+                <div class="p-6 border-b border-gray-200">
+                    <h2 class="text-lg font-semibold text-gray-900">Investment Portfolio</h2>
+                </div>
+                
+                <div class="divide-y divide-gray-200">
+                    {% for investment in investments %}
+                        <div class="p-6">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="flex items-center">
+                                    <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                                        <i class="fas fa-chart-pie text-blue-600"></i>
+                                    </div>
+                                    <div class="ml-4">
+                                        <h3 class="text-lg font-semibold text-gray-900">{{ investment.plan.name }}</h3>
+                                        <p class="text-sm text-gray-600">{{ investment.plan.description|truncatechars:60 }}</p>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    {% if investment.status == 'active' %}
+                                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                                            <i class="fas fa-play mr-1"></i>Active
+                                        </span>
+                                    {% elif investment.status == 'completed' %}
+                                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+                                            <i class="fas fa-check mr-1"></i>Completed
+                                        </span>
+                                    {% elif investment.status == 'cancelled' %}
+                                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
+                                            <i class="fas fa-times mr-1"></i>Cancelled
+                                        </span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-4">
+                                <div>
+                                    <p class="text-sm text-gray-600">Investment Amount</p>
+                                    <p class="text-lg font-semibold text-gray-900">${{ investment.amount|floatformat:2 }}</p>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-600">Expected Return</p>
+                                    <p class="text-lg font-semibold text-green-600">${{ investment.expected_return|floatformat:2 }}</p>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-600">ROI Percentage</p>
+                                    <p class="text-lg font-semibold text-purple-600">{{ investment.plan.roi_percentage }}%</p>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-600">Duration</p>
+                                    <p class="text-lg font-semibold text-gray-900">{{ investment.plan.duration_days }} days</p>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-600">Progress</p>
+                                    <div class="w-full bg-gray-200 rounded-full h-2 mt-1">
+                                        <div class="bg-blue-600 h-2 rounded-full" style="width: 45%"></div>
+                                    </div>
+                                    <p class="text-xs text-gray-500 mt-1">45% complete</p>
+                                </div>
+                            </div>
+                            
+                            <div class="flex justify-between items-center text-sm text-gray-600">
+                                <div>
+                                    <span>Started: {{ investment.start_date|date:"M d, Y" }}</span>
+                                    <span class="mx-2">•</span>
+                                    <span>Ends: {{ investment.end_date|date:"M d, Y" }}</span>
+                                </div>
+                                {% if investment.status == 'completed' %}
+                                    <span class="text-green-600 font-medium">
+                                        <i class="fas fa-check-circle mr-1"></i>
+                                        Completed on {{ investment.completed_at|date:"M d, Y" }}
+                                    </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center py-12">
+                    <i class="fas fa-chart-pie text-gray-400 text-4xl mb-4"></i>
+                    <h3 class="text-lg font-medium text-gray-900 mb-2">No investments yet</h3>
+                    <p class="text-gray-500 mb-6">Start investing to grow your portfolio and earn returns</p>
+                    <a href="{% url 'transactions:new_investment' %}" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700">
+                        <i class="fas fa-plus mr-2"></i>Start Investing
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

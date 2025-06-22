@@ -1,0 +1,129 @@
+{% extends 'base.html' %}
+
+{% block title %}My Deposits - {{ site_settings.site_name|default:"Investment Platform" }}{% endblock %}
+
+{% block page_title %}My Deposits{% endblock %}
+
+{% block content %}
+<div class="pt-16 p-6">
+    <div class="max-w-6xl mx-auto">
+        <!-- Page Header -->
+        <div class="flex justify-between items-center mb-8">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900">My Deposits</h1>
+                <p class="text-gray-600">Track all your deposit transactions</p>
+            </div>
+            <a href="{% url 'transactions:new_deposit' %}" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700">
+                <i class="fas fa-plus mr-2"></i>New Deposit
+            </a>
+        </div>
+        
+        <!-- Deposits Table -->
+        <div class="bg-white rounded-lg shadow overflow-hidden">
+            {% if deposits %}
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payment Method</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Transaction ID</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            {% for deposit in deposits %}
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                        {{ deposit.created_at|date:"M d, Y H:i" }}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm font-medium text-gray-900">${{ deposit.amount|floatformat:2 }}</div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="flex items-center">
+                                            {% if deposit.payment_method == 'BTC' %}
+                                                <i class="fab fa-bitcoin text-orange-500 mr-2"></i>
+                                            {% elif deposit.payment_method == 'USDT' %}
+                                                <i class="fas fa-dollar-sign text-green-500 mr-2"></i>
+                                            {% elif deposit.payment_method == 'ETH' %}
+                                                <i class="fab fa-ethereum text-blue-500 mr-2"></i>
+                                            {% else %}
+                                                <i class="fas fa-university text-gray-500 mr-2"></i>
+                                            {% endif %}
+                                            <span class="text-sm text-gray-900">{{ deposit.get_payment_method_display }}</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-mono">
+                                        {% if deposit.transaction_id %}
+                                            {{ deposit.transaction_id|truncatechars:20 }}
+                                        {% else %}
+                                            <span class="text-gray-400">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        {% if deposit.status == 'pending' %}
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                                <i class="fas fa-clock mr-1"></i>Pending
+                                            </span>
+                                        {% elif deposit.status == 'approved' %}
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                                <i class="fas fa-check mr-1"></i>Approved
+                                            </span>
+                                        {% elif deposit.status == 'rejected' %}
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                                <i class="fas fa-times mr-1"></i>Rejected
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                        {% if deposit.proof_of_payment %}
+                                            <a href="{{ deposit.proof_of_payment.url }}" target="_blank" class="text-blue-600 hover:text-blue-900">
+                                                <i class="fas fa-eye mr-1"></i>View Proof
+                                            </a>
+                                        {% else %}
+                                            <span class="text-gray-400">No proof</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-12">
+                    <i class="fas fa-plus-circle text-gray-400 text-4xl mb-4"></i>
+                    <h3 class="text-lg font-medium text-gray-900 mb-2">No deposits yet</h3>
+                    <p class="text-gray-500 mb-6">Start by making your first deposit to begin investing</p>
+                    <a href="{% url 'transactions:new_deposit' %}" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700">
+                        <i class="fas fa-plus mr-2"></i>Make First Deposit
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+        
+        <!-- Deposit Instructions -->
+        <div class="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-6">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <i class="fas fa-info-circle text-blue-600"></i>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-sm font-medium text-blue-800">Deposit Instructions</h3>
+                    <div class="mt-2 text-sm text-blue-700">
+                        <ol class="list-decimal list-inside space-y-1">
+                            <li>Click "New Deposit" to start a deposit request</li>
+                            <li>Choose your payment method and enter the amount</li>
+                            <li>Send the funds to the provided wallet address</li>
+                            <li>Upload proof of payment (screenshot or transaction hash)</li>
+                            <li>Wait for admin approval (usually within 24 hours)</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,110 @@
+<form method="POST" action="{% url 'admin_panel:edit_investment' investment.id %}">
+    <div class="px-6 py-4 space-y-4">
+        {% csrf_token %}
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Investment Plan</label>
+            <select name="plan" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                {% for plan in investment_plans %}
+                    <option value="{{ plan.id }}" {% if plan.id == investment.plan.id %}selected{% endif %}>
+                        {{ plan.name }} ({{ plan.roi_percentage }}% ROI - {{ plan.duration_days }} days)
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Investment Amount</label>
+            <input type="number" name="amount" step="0.01" min="0" required 
+                   value="{{ investment.amount }}"
+                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+        </div>
+        
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Expected Return</label>
+            <input type="number" name="expected_return" step="0.01" min="0" required 
+                   value="{{ investment.expected_return }}"
+                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+        </div>
+        
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+            <select name="status" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                <option value="active" {% if investment.status == 'active' %}selected{% endif %}>Active</option>
+                <option value="completed" {% if investment.status == 'completed' %}selected{% endif %}>Completed</option>
+                <option value="cancelled" {% if investment.status == 'cancelled' %}selected{% endif %}>Cancelled</option>
+            </select>
+        </div>
+        
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Start Date</label>
+            <input type="datetime-local" name="start_date" required 
+                   value="{{ investment.start_date|date:'Y-m-d\TH:i' }}"
+                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+        </div>
+        
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">End Date</label>
+            <input type="datetime-local" name="end_date" required 
+                   value="{{ investment.end_date|date:'Y-m-d\TH:i' }}"
+                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+        </div>
+        
+        {% if investment.status == 'completed' %}
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Completed At</label>
+            <input type="datetime-local" name="completed_at" 
+                   value="{% if investment.completed_at %}{{ investment.completed_at|date:'Y-m-d\TH:i' }}{% endif %}"
+                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+        </div>
+        {% endif %}
+    </div>
+    
+    <div class="px-6 py-4 border-t border-gray-200 flex justify-end space-x-3">
+        <button type="button" onclick="closeModal('editInvestmentModal')" 
+                class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
+            Cancel
+        </button>
+        <button type="submit" 
+                class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
+            Update Investment
+        </button>
+    </div>
+</form>
+
+<script>
+// Handle form submission
+document.querySelector('#editInvestmentModal form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const submitButton = this.querySelector('button[type="submit"]');
+    const originalText = submitButton.innerHTML;
+    
+    // Show loading
+    submitButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Updating...';
+    submitButton.disabled = true;
+    
+    fetch(this.action, {
+        method: 'POST',
+        body: formData,
+    })
+    .then(response => {
+        if (response.ok) {
+            closeModal('editInvestmentModal');
+            showMessage('Investment updated successfully!', 'success');
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            throw new Error('Failed to update investment');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showMessage('Error updating investment. Please try again.', 'error');
+    })
+    .finally(() => {
+        // Restore button
+        submitButton.innerHTML = originalText;
+        submitButton.disabled = false;
+    });
+});
+</script>

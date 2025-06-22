@@ -1,0 +1,249 @@
+{% extends 'base.html' %}
+
+{% block title %}My Profile - {{ site_settings.site_name|default:"Investment Platform" }}{% endblock %}
+
+{% block page_title %}My Profile{% endblock %}
+
+{% block content %}
+<div class="pt-16 p-6">
+    <div class="max-w-4xl mx-auto">
+        <!-- Profile Header -->
+        <div class="bg-white rounded-lg shadow mb-6">
+            <div class="p-6 border-b border-gray-200">
+                <div class="flex items-center">
+                    <div class="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center text-white text-2xl font-bold">
+                        {{ user.username|first|upper }}
+                    </div>
+                    <div class="ml-4">
+                        <h1 class="text-2xl font-bold text-gray-900">{{ user.full_name|default:user.username }}</h1>
+                        <p class="text-gray-600">{{ user.email }}</p>
+                        <div class="flex items-center mt-2">
+                            {% if user.is_verified %}
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                    <i class="fas fa-check-circle mr-1"></i>
+                                    Verified
+                                </span>
+                            {% else %}
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                    <i class="fas fa-clock mr-1"></i>
+                                    Pending Verification
+                                </span>
+                            {% endif %}
+                            
+                            {% if user.is_approved %}
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 ml-2">
+                                    <i class="fas fa-user-check mr-1"></i>
+                                    Approved
+                                </span>
+                            {% else %}
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 ml-2">
+                                    <i class="fas fa-user-times mr-1"></i>
+                                    Pending Approval
+                                </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Account Stats -->
+            <div class="p-6">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div class="text-center">
+                        <p class="text-2xl font-bold text-green-600">${{ user.profile.account_balance|floatformat:2 }}</p>
+                        <p class="text-sm text-gray-600">Account Balance</p>
+                    </div>
+                    <div class="text-center">
+                        <p class="text-2xl font-bold text-blue-600">${{ user.profile.total_deposit|floatformat:2 }}</p>
+                        <p class="text-sm text-gray-600">Total Deposits</p>
+                    </div>
+                    <div class="text-center">
+                        <p class="text-2xl font-bold text-purple-600">${{ user.profile.current_investment|floatformat:2 }}</p>
+                        <p class="text-sm text-gray-600">Active Investments</p>
+                    </div>
+                    <div class="text-center">
+                        <p class="text-2xl font-bold text-yellow-600">${{ user.profile.total_bonus|floatformat:2 }}</p>
+                        <p class="text-sm text-gray-600">Total Bonuses</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab Navigation -->
+        <div class="bg-white rounded-lg shadow mb-6">
+            <div class="border-b border-gray-200">
+                <nav class="-mb-px flex space-x-8 px-6">
+                    <button onclick="showTab('profile')" id="profile-tab" class="tab-button active py-4 px-1 border-b-2 border-blue-500 font-medium text-sm text-blue-600">
+                        Profile Information
+                    </button>
+                    <button onclick="showTab('security')" id="security-tab" class="tab-button py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300">
+                        Security Settings
+                    </button>
+                </nav>
+            </div>
+        </div>
+        
+        <!-- Profile Information Tab -->
+        <div id="profile-content" class="tab-content bg-white rounded-lg shadow">
+            <div class="p-6 border-b border-gray-200">
+                <h2 class="text-lg font-semibold text-gray-900">Update Profile Information</h2>
+            </div>
+            
+            <form method="post" action="{% url 'accounts:profile' %}" class="p-6">
+                {% csrf_token %}
+                <input type="hidden" name="form_type" value="profile">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="{{ form.state.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">State/Province</label>
+                        {{ form.state }}
+                        {% if form.state.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ form.state.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                    
+                    <div>
+                        <label for="{{ form.country.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">Country</label>
+                        {{ form.country }}
+                        {% if form.country.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ form.country.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                    
+                    <div>
+                        <label for="{{ form.currency.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">Preferred Currency</label>
+                        {{ form.currency }}
+                        {% if form.currency.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ form.currency.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                    
+                    <div>
+                        <label for="{{ form.phone_number.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
+                        {{ form.phone_number }}
+                        {% if form.phone_number.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ form.phone_number.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="mt-6">
+                    <label for="{{ form.address.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">Address</label>
+                    {{ form.address }}
+                    {% if form.address.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.address.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                
+                <div class="mt-6 flex justify-end">
+                    <button type="submit" class="px-6 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        Update Profile
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Security Settings Tab -->
+        <div id="security-content" class="tab-content bg-white rounded-lg shadow hidden">
+            <div class="p-6 border-b border-gray-200">
+                <h2 class="text-lg font-semibold text-gray-900">Change Password</h2>
+                <p class="text-sm text-gray-600 mt-1">Update your password to keep your account secure</p>
+            </div>
+            
+            <form method="post" action="{% url 'accounts:change_password' %}" class="p-6">
+                {% csrf_token %}
+                <div class="space-y-6">
+                    <div>
+                        <label for="old_password" class="block text-sm font-medium text-gray-700 mb-2">Current Password</label>
+                        <input type="password" name="old_password" id="old_password" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+                    
+                    <div>
+                        <label for="new_password1" class="block text-sm font-medium text-gray-700 mb-2">New Password</label>
+                        <input type="password" name="new_password1" id="new_password1" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <p class="mt-1 text-xs text-gray-500">Password must be at least 8 characters long</p>
+                    </div>
+                    
+                    <div>
+                        <label for="new_password2" class="block text-sm font-medium text-gray-700 mb-2">Confirm New Password</label>
+                        <input type="password" name="new_password2" id="new_password2" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+                </div>
+                
+                <div class="mt-6 flex justify-end">
+                    <button type="submit" class="px-6 py-2 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500">
+                        Change Password
+                    </button>
+                </div>
+            </form>
+        </div>
+        
+        <!-- Referral Information -->
+        <div class="bg-white rounded-lg shadow mt-6">
+            <div class="p-6 border-b border-gray-200">
+                <h2 class="text-lg font-semibold text-gray-900">Referral Information</h2>
+            </div>
+            
+            <div class="p-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Your Referral Code</label>
+                        <div class="flex">
+                            <input type="text" value="{{ user.profile.referral_code }}" id="referral-code" class="flex-1 px-3 py-2 border border-gray-300 rounded-l-lg bg-gray-50" readonly>
+                            <button onclick="copyToClipboard('{{ user.profile.referral_code }}')" class="px-4 py-2 bg-blue-600 text-white rounded-r-lg hover:bg-blue-700">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Referral Link</label>
+                        <div class="flex">
+                            <input type="text" value="{{ request.build_absolute_uri }}{% url 'accounts:register_step1' %}?ref={{ user.profile.referral_code }}" id="referral-link" class="flex-1 px-3 py-2 border border-gray-300 rounded-l-lg bg-gray-50 text-xs" readonly>
+                            <button onclick="copyToClipboard('{{ request.build_absolute_uri }}{% url 'accounts:register_step1' %}?ref={{ user.profile.referral_code }}')" class="px-4 py-2 bg-blue-600 text-white rounded-r-lg hover:bg-blue-700">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function showTab(tabName) {
+    // Hide all tab contents
+    document.querySelectorAll('.tab-content').forEach(content => {
+        content.classList.add('hidden');
+    });
+    
+    // Remove active class from all tabs
+    document.querySelectorAll('.tab-button').forEach(button => {
+        button.classList.remove('active', 'border-blue-500', 'text-blue-600');
+        button.classList.add('border-transparent', 'text-gray-500');
+    });
+    
+    // Show selected tab content
+    document.getElementById(tabName + '-content').classList.remove('hidden');
+    
+    // Add active class to selected tab
+    const activeTab = document.getElementById(tabName + '-tab');
+    activeTab.classList.add('active', 'border-blue-500', 'text-blue-600');
+    activeTab.classList.remove('border-transparent', 'text-gray-500');
+}
+
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(function() {
+        // Show success message
+        const toast = document.createElement('div');
+        toast.className = 'fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg z-50';
+        toast.textContent = 'Copied to clipboard!';
+        document.body.appendChild(toast);
+        
+        setTimeout(() => {
+            document.body.removeChild(toast);
+        }, 3000);
+    });
+}
+</script>
+{% endblock %}

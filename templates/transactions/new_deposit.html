@@ -1,0 +1,183 @@
+{% extends 'base.html' %}
+
+{% block title %}New Deposit - {{ site_settings.site_name|default:"Investment Platform" }}{% endblock %}
+
+{% block page_title %}New Deposit{% endblock %}
+
+{% block content %}
+<div class="pt-16 p-6">
+    <div class="max-w-2xl mx-auto">
+        <!-- Page Header -->
+        <div class="mb-8">
+            <h1 class="text-2xl font-bold text-gray-900">Make a Deposit</h1>
+            <p class="text-gray-600">Add funds to your account to start investing</p>
+        </div>
+        
+        <!-- Deposit Form -->
+        <div class="bg-white rounded-lg shadow">
+            <div class="p-6 border-b border-gray-200">
+                <h2 class="text-lg font-semibold text-gray-900">Deposit Information</h2>
+            </div>
+            
+            <form method="post" enctype="multipart/form-data" class="p-6">
+                {% csrf_token %}
+                <div class="space-y-6">
+                    <div>
+                        <label for="{{ form.amount.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                            Deposit Amount (USD)
+                        </label>
+                        {{ form.amount }}
+                        {% if form.amount.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ form.amount.errors.0 }}</p>
+                        {% endif %}
+                        <p class="mt-1 text-xs text-gray-500">Minimum deposit: $10.00</p>
+                    </div>
+                    
+                    <div>
+                        <label for="{{ form.payment_method.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                            Payment Method
+                        </label>
+                        {{ form.payment_method }}
+                        {% if form.payment_method.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ form.payment_method.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Payment Instructions -->
+                    <div id="payment-instructions" class="hidden">
+                        <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                            <h3 class="text-sm font-medium text-gray-900 mb-2">Payment Instructions</h3>
+                            <div id="btc-instructions" class="hidden">
+                                <p class="text-sm text-gray-700 mb-2">Send Bitcoin to the following address:</p>
+                                <div class="flex">
+                                    <input type="text" value="{{ site_settings.btc_wallet }}" id="btc-address" class="flex-1 px-3 py-2 border border-gray-300 rounded-l-lg bg-white text-sm font-mono" readonly>
+                                    <button type="button" onclick="copyToClipboard('{{ site_settings.btc_wallet }}')" class="px-4 py-2 bg-orange-600 text-white rounded-r-lg hover:bg-orange-700">
+                                        <i class="fas fa-copy"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div id="usdt-instructions" class="hidden">
+                                <p class="text-sm text-gray-700 mb-2">Send USDT to the following address:</p>
+                                <div class="flex">
+                                    <input type="text" value="{{ site_settings.usdt_wallet }}" id="usdt-address" class="flex-1 px-3 py-2 border border-gray-300 rounded-l-lg bg-white text-sm font-mono" readonly>
+                                    <button type="button" onclick="copyToClipboard('{{ site_settings.usdt_wallet }}')" class="px-4 py-2 bg-green-600 text-white rounded-r-lg hover:bg-green-700">
+                                        <i class="fas fa-copy"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div id="eth-instructions" class="hidden">
+                                <p class="text-sm text-gray-700 mb-2">Send Ethereum to the following address:</p>
+                                <div class="flex">
+                                    <input type="text" value="{{ site_settings.eth_wallet }}" id="eth-address" class="flex-1 px-3 py-2 border border-gray-300 rounded-l-lg bg-white text-sm font-mono" readonly>
+                                    <button type="button" onclick="copyToClipboard('{{ site_settings.eth_wallet }}')" class="px-4 py-2 bg-blue-600 text-white rounded-r-lg hover:bg-blue-700">
+                                        <i class="fas fa-copy"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div id="bank-instructions" class="hidden">
+                                <p class="text-sm text-gray-700">Contact support for bank transfer details.</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label for="{{ form.transaction_id.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                            Transaction ID/Hash (Optional)
+                        </label>
+                        {{ form.transaction_id }}
+                        {% if form.transaction_id.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ form.transaction_id.errors.0 }}</p>
+                        {% endif %}
+                        <p class="mt-1 text-xs text-gray-500">Enter the transaction hash from your wallet</p>
+                    </div>
+                    
+                    <div>
+                        <label for="{{ form.proof_of_payment.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                            Proof of Payment
+                        </label>
+                        {{ form.proof_of_payment }}
+                        {% if form.proof_of_payment.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ form.proof_of_payment.errors.0 }}</p>
+                        {% endif %}
+                        <p class="mt-1 text-xs text-gray-500">Upload a screenshot or receipt of your payment</p>
+                    </div>
+                </div>
+                
+                <div class="mt-8 flex justify-between">
+                    <a href="{% url 'transactions:deposits' %}" class="px-4 py-2 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50">
+                        Cancel
+                    </a>
+                    <button type="submit" class="px-6 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700">
+                        Submit Deposit Request
+                    </button>
+                </div>
+            </form>
+        </div>
+        
+        <!-- Important Notice -->
+        <div class="mt-6 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <i class="fas fa-exclamation-triangle text-yellow-600"></i>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-sm font-medium text-yellow-800">Important Notice</h3>
+                    <div class="mt-2 text-sm text-yellow-700">
+                        <ul class="list-disc list-inside space-y-1">
+                            <li>Double-check the wallet address before sending funds</li>
+                            <li>Only send the selected cryptocurrency to avoid loss of funds</li>
+                            <li>Deposits are processed within 24 hours after verification</li>
+                            <li>Upload clear proof of payment to speed up processing</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const paymentMethodSelect = document.getElementById('{{ form.payment_method.id_for_label }}');
+    const instructionsDiv = document.getElementById('payment-instructions');
+    const btcInstructions = document.getElementById('btc-instructions');
+    const usdtInstructions = document.getElementById('usdt-instructions');
+    const ethInstructions = document.getElementById('eth-instructions');
+    const bankInstructions = document.getElementById('bank-instructions');
+    
+    function showInstructions() {
+        const selectedMethod = paymentMethodSelect.value;
+        
+        // Hide all instructions first
+        btcInstructions.classList.add('hidden');
+        usdtInstructions.classList.add('hidden');
+        ethInstructions.classList.add('hidden');
+        bankInstructions.classList.add('hidden');
+        
+        if (selectedMethod) {
+            instructionsDiv.classList.remove('hidden');
+            
+            switch(selectedMethod) {
+                case 'BTC':
+                    btcInstructions.classList.remove('hidden');
+                    break;
+                case 'USDT':
+                    usdtInstructions.classList.remove('hidden');
+                    break;
+                case 'ETH':
+                    ethInstructions.classList.remove('hidden');
+                    break;
+                case 'bank_transfer':
+                    bankInstructions.classList.remove('hidden');
+                    break;
+            }
+        } else {
+            instructionsDiv.classList.add('hidden');
+        }
+    }
+    
+    paymentMethodSelect.addEventListener('change', showInstructions);
+    showInstructions(); // Show instructions on page load if method is already selected
+});
+</script>
+{% endblock %}

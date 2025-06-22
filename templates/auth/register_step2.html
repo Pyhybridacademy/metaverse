@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+
+{% block title %}Register - Step 2 - {{ site_settings.site_name|default:"Investment Platform" }}{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-md w-full space-y-8">
+        <div>
+            <div class="mx-auto h-12 w-12 flex items-center justify-center bg-blue-500 rounded-full">
+                <i class="fas fa-user-check text-white text-xl"></i>
+            </div>
+            <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
+                Complete your profile
+            </h2>
+            <p class="mt-2 text-center text-sm text-gray-600">
+                Step 2 of 2 - Additional Information
+            </p>
+        </div>
+        
+        <form class="mt-8 space-y-6" method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="space-y-4">
+                <div>
+                    <label for="{{ form.state.id_for_label }}" class="block text-sm font-medium text-gray-700">State/Province</label>
+                    {{ form.state }}
+                    {% if form.state.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.state.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label for="{{ form.country.id_for_label }}" class="block text-sm font-medium text-gray-700">Country</label>
+                    {{ form.country }}
+                    {% if form.country.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.country.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label for="{{ form.currency.id_for_label }}" class="block text-sm font-medium text-gray-700">Preferred Currency</label>
+                    {{ form.currency }}
+                    {% if form.currency.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.currency.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label for="{{ form.referral_code.id_for_label }}" class="block text-sm font-medium text-gray-700">Referral Code (Optional)</label>
+                    {{ form.referral_code }}
+                    {% if form.referral_code.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.referral_code.errors.0 }}</p>
+                    {% endif %}
+                    <p class="mt-1 text-xs text-gray-500">Enter a referral code if you were referred by someone</p>
+                </div>
+                
+                <!-- KYC Document Upload -->
+                <div class="border-t border-gray-200 pt-4">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Identity Verification (Optional)</h3>
+                    <div>
+                        <label for="{{ kyc_form.document_type.id_for_label }}" class="block text-sm font-medium text-gray-700">Document Type</label>
+                        {{ kyc_form.document_type }}
+                        {% if kyc_form.document_type.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ kyc_form.document_type.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mt-4">
+                        <label for="{{ kyc_form.document_file.id_for_label }}" class="block text-sm font-medium text-gray-700">Upload Document</label>
+                        {{ kyc_form.document_file }}
+                        {% if kyc_form.document_file.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ kyc_form.document_file.errors.0 }}</p>
+                        {% endif %}
+                        <p class="mt-1 text-xs text-gray-500">Upload a clear photo of your ID document (optional but recommended)</p>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <button type="submit" 
+                        class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    Complete Registration
+                    <i class="fas fa-check ml-2"></i>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

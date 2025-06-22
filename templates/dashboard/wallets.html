@@ -1,0 +1,184 @@
+{% extends 'base.html' %}
+
+{% block title %}My Wallets - {{ site_settings.site_name|default:"Investment Platform" }}{% endblock %}
+
+{% block page_title %}My Wallets{% endblock %}
+
+{% block content %}
+<div class="pt-16 p-6">
+    <div class="max-w-4xl mx-auto">
+        <!-- Page Header -->
+        <div class="mb-8">
+            <h1 class="text-2xl font-bold text-gray-900">My Wallet Addresses</h1>
+            <p class="text-gray-600">Manage your cryptocurrency wallet addresses for deposits and withdrawals</p>
+        </div>
+        
+        <!-- Wallets Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {% for wallet in wallets %}
+                <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+                    <div class="p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="flex items-center">
+                                <div class="w-12 h-12 rounded-lg flex items-center justify-center
+                                    {% if wallet.wallet_type == 'BTC' %}bg-orange-100{% endif %}
+                                    {% if wallet.wallet_type == 'USDT' %}bg-green-100{% endif %}
+                                    {% if wallet.wallet_type == 'ETH' %}bg-blue-100{% endif %}
+                                    {% if wallet.wallet_type == 'LTC' %}bg-gray-100{% endif %}">
+                                    {% if wallet.wallet_type == 'BTC' %}
+                                        <i class="fab fa-bitcoin text-orange-600 text-xl"></i>
+                                    {% elif wallet.wallet_type == 'USDT' %}
+                                        <i class="fas fa-dollar-sign text-green-600 text-xl"></i>
+                                    {% elif wallet.wallet_type == 'ETH' %}
+                                        <i class="fab fa-ethereum text-blue-600 text-xl"></i>
+                                    {% elif wallet.wallet_type == 'LTC' %}
+                                        <i class="fas fa-coins text-gray-600 text-xl"></i>
+                                    {% endif %}
+                                </div>
+                                <div class="ml-3">
+                                    <h3 class="text-lg font-semibold text-gray-900">{{ wallet.get_wallet_type_display }}</h3>
+                                    {% if wallet.is_primary %}
+                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                            <i class="fas fa-star mr-1"></i>Primary
+                                        </span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Wallet Address</label>
+                            <div class="flex">
+                                <input type="text" 
+                                       value="{{ wallet.address }}" 
+                                       id="wallet-{{ wallet.id }}" 
+                                       class="flex-1 px-3 py-2 border border-gray-300 rounded-l-lg bg-gray-50 text-sm font-mono" 
+                                       readonly>
+                                <button onclick="copyToClipboard('{{ wallet.address }}')" 
+                                        class="px-4 py-2 bg-gray-600 text-white rounded-r-lg hover:bg-gray-700 transition-colors">
+                                    <i class="fas fa-copy"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="text-xs text-gray-500">
+                            Added on {{ wallet.created_at|date:"M d, Y" }}
+                        </div>
+                    </div>
+                </div>
+            {% empty %}
+                <div class="col-span-2 text-center py-12">
+                    <i class="fas fa-wallet text-gray-400 text-4xl mb-4"></i>
+                    <h3 class="text-lg font-medium text-gray-900 mb-2">No wallet addresses found</h3>
+                    <p class="text-gray-500">Your wallet addresses will appear here once you complete registration.</p>
+                </div>
+            {% endfor %}
+        </div>
+        
+        <!-- Platform Wallet Addresses -->
+        {% if site_settings %}
+            <div class="mt-12">
+                <h2 class="text-xl font-bold text-gray-900 mb-6">Platform Deposit Addresses</h2>
+                <p class="text-gray-600 mb-6">Use these addresses to make deposits to your account</p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {% if site_settings.btc_wallet %}
+                        <div class="bg-orange-50 border border-orange-200 rounded-lg p-6">
+                            <div class="flex items-center mb-4">
+                                <div class="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
+                                    <i class="fab fa-bitcoin text-orange-600 text-lg"></i>
+                                </div>
+                                <h3 class="ml-3 text-lg font-semibold text-gray-900">Bitcoin (BTC)</h3>
+                            </div>
+                            <div class="mb-4">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Deposit Address</label>
+                                <div class="flex">
+                                    <input type="text" 
+                                           value="{{ site_settings.btc_wallet }}" 
+                                           id="platform-btc" 
+                                           class="flex-1 px-3 py-2 border border-gray-300 rounded-l-lg bg-white text-sm font-mono" 
+                                           readonly>
+                                    <button onclick="copyToClipboard('{{ site_settings.btc_wallet }}')" 
+                                            class="px-4 py-2 bg-orange-600 text-white rounded-r-lg hover:bg-orange-700">
+                                        <i class="fas fa-copy"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+                    
+                    {% if site_settings.usdt_wallet %}
+                        <div class="bg-green-50 border border-green-200 rounded-lg p-6">
+                            <div class="flex items-center mb-4">
+                                <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-dollar-sign text-green-600 text-lg"></i>
+                                </div>
+                                <h3 class="ml-3 text-lg font-semibold text-gray-900">Tether (USDT)</h3>
+                            </div>
+                            <div class="mb-4">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Deposit Address</label>
+                                <div class="flex">
+                                    <input type="text" 
+                                           value="{{ site_settings.usdt_wallet }}" 
+                                           id="platform-usdt" 
+                                           class="flex-1 px-3 py-2 border border-gray-300 rounded-l-lg bg-white text-sm font-mono" 
+                                           readonly>
+                                    <button onclick="copyToClipboard('{{ site_settings.usdt_wallet }}')" 
+                                            class="px-4 py-2 bg-green-600 text-white rounded-r-lg hover:bg-green-700">
+                                        <i class="fas fa-copy"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+                    
+                    {% if site_settings.eth_wallet %}
+                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-6">
+                            <div class="flex items-center mb-4">
+                                <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                                    <i class="fab fa-ethereum text-blue-600 text-lg"></i>
+                                </div>
+                                <h3 class="ml-3 text-lg font-semibold text-gray-900">Ethereum (ETH)</h3>
+                            </div>
+                            <div class="mb-4">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Deposit Address</label>
+                                <div class="flex">
+                                    <input type="text" 
+                                           value="{{ site_settings.eth_wallet }}" 
+                                           id="platform-eth" 
+                                           class="flex-1 px-3 py-2 border border-gray-300 rounded-l-lg bg-white text-sm font-mono" 
+                                           readonly>
+                                    <button onclick="copyToClipboard('{{ site_settings.eth_wallet }}')" 
+                                            class="px-4 py-2 bg-blue-600 text-white rounded-r-lg hover:bg-blue-700">
+                                        <i class="fas fa-copy"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        {% endif %}
+        
+        <!-- Important Notice -->
+        <div class="mt-8 bg-yellow-50 border border-yellow-200 rounded-lg p-6">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <i class="fas fa-exclamation-triangle text-yellow-600"></i>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-sm font-medium text-yellow-800">Important Notice</h3>
+                    <div class="mt-2 text-sm text-yellow-700">
+                        <ul class="list-disc list-inside space-y-1">
+                            <li>Always double-check wallet addresses before sending funds</li>
+                            <li>Only send the corresponding cryptocurrency to each address</li>
+                            <li>Deposits may take 10-30 minutes to reflect in your account</li>
+                            <li>Contact support if you have any issues with deposits</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,181 @@
+<div id="admin-sidebar" class="fixed inset-y-0 left-0 z-30 w-64 bg-gray-900 transform -translate-x-full transition-transform duration-300 ease-in-out lg:translate-x-0">
+    <div class="flex items-center justify-center h-16 bg-red-800">
+        <div class="flex items-center space-x-2">
+            {% if site_settings.site_logo %}
+                <img src="{{ site_settings.site_logo.url }}" alt="Logo" class="w-8 h-8">
+            {% else %}
+                <div class="w-8 h-8 bg-red-500 rounded flex items-center justify-center">
+                    <i class="fas fa-shield-alt text-white"></i>
+                </div>
+            {% endif %}
+            <span class="text-white text-lg font-semibold">Admin Panel</span>
+        </div>
+    </div>
+    
+    <nav class="mt-8 h-[calc(100vh-4rem)] overflow-y-auto">
+        <div class="px-4 space-y-2">
+            <!-- Dashboard -->
+            <a href="{% url 'admin_panel:dashboard' %}" class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white rounded-lg transition-colors duration-200 {% if request.resolver_match.url_name == 'dashboard' %}bg-gray-700 text-white{% endif %}">
+                <i class="fas fa-tachometer-alt mr-3"></i>
+                Dashboard
+            </a>
+            
+            <!-- User Management -->
+            <div class="space-y-1">
+                <div class="text-gray-400 text-xs uppercase tracking-wider px-4 py-2">User Management</div>
+                
+                <a href="{% url 'admin_panel:manage_users' %}" class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white rounded-lg transition-colors duration-200 {% if request.resolver_match.url_name == 'manage_users' %}bg-gray-700 text-white{% endif %}">
+                    <i class="fas fa-users mr-3"></i>
+                    All Users
+                    {% if pending_kyc > 0 %}
+                        <span class="ml-auto bg-red-500 text-white text-xs px-2 py-1 rounded-full">{{ pending_kyc }}</span>
+                    {% endif %}
+                </a>
+                
+                <a href="{% url 'admin_panel:manage_users' %}?status=pending" class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white rounded-lg transition-colors duration-200">
+                    <i class="fas fa-user-clock mr-3"></i>
+                    Pending KYC
+                    {% if pending_kyc > 0 %}
+                        <span class="ml-auto bg-yellow-500 text-white text-xs px-2 py-1 rounded-full">{{ pending_kyc }}</span>
+                    {% endif %}
+                </a>
+                
+                <a href="{% url 'admin_panel:manage_users' %}?status=verified" class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white rounded-lg transition-colors duration-200">
+                    <i class="fas fa-user-check mr-3"></i>
+                    Verified Users
+                </a>
+            </div>
+            
+            <!-- Transaction Management -->
+            <div class="space-y-1">
+                <div class="text-gray-400 text-xs uppercase tracking-wider px-4 py-2">Transactions</div>
+                
+                <a href="{% url 'admin_panel:manage_deposits' %}" class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white rounded-lg transition-colors duration-200 {% if request.resolver_match.url_name == 'manage_deposits' %}bg-gray-700 text-white{% endif %}">
+                    <i class="fas fa-arrow-down mr-3"></i>
+                    Deposits
+                    {% if pending_deposits > 0 %}
+                        <span class="ml-auto bg-blue-500 text-white text-xs px-2 py-1 rounded-full">{{ pending_deposits }}</span>
+                    {% endif %}
+                </a>
+                
+                <a href="{% url 'admin_panel:manage_withdrawals' %}" class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white rounded-lg transition-colors duration-200 {% if request.resolver_match.url_name == 'manage_withdrawals' %}bg-gray-700 text-white{% endif %}">
+                    <i class="fas fa-arrow-up mr-3"></i>
+                    Withdrawals
+                    {% if pending_withdrawals > 0 %}
+                        <span class="ml-auto bg-red-500 text-white text-xs px-2 py-1 rounded-full">{{ pending_withdrawals }}</span>
+                    {% endif %}
+                </a>
+                
+                <a href="{% url 'admin_panel:manage_investments' %}" class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white rounded-lg transition-colors duration-200 {% if request.resolver_match.url_name == 'manage_investments' %}bg-gray-700 text-white{% endif %}">
+                    <i class="fas fa-chart-pie mr-3"></i>
+                    All Investments
+                </a>
+            </div>
+            
+            <!-- Platform Management -->
+            <div class="space-y-1">
+                <div class="text-gray-400 text-xs uppercase tracking-wider px-4 py-2">Platform</div>
+                
+                <a href="{% url 'admin_panel:manage_investment_plans' %}" class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white rounded-lg transition-colors duration-200 {% if request.resolver_match.url_name == 'manage_investment_plans' %}bg-gray-700 text-white{% endif %}">
+                    <i class="fas fa-layer-group mr-3"></i>
+                    Investment Plans
+                </a>
+                
+                <a href="{% url 'admin_panel:manage_testimonials' %}" class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white rounded-lg transition-colors duration-200 {% if request.resolver_match.url_name == 'manage_testimonials' %}bg-gray-700 text-white{% endif %}">
+                    <i class="fas fa-comment-alt mr-3"></i>
+                    Testimonials
+                </a>
+
+                <a href="{% url 'admin_panel:manage_certifications' %}" class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white rounded-lg transition-colors duration-200 {% if request.resolver_match.url_name == 'manage_certifications' %}bg-gray-700 text-white{% endif %}">
+                    <i class="fas fa-certificate mr-3"></i>
+                    Certifications
+                </a>
+                
+                <a href="{% url 'admin_panel:settings' %}" class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white rounded-lg transition-colors duration-200 {% if request.resolver_match.url_name == 'settings' %}bg-gray-700 text-white{% endif %}">
+                    <i class="fas fa-cog mr-3"></i>
+                    Platform Settings
+                </a>
+                
+                <a href="{% url 'admin_panel:reports' %}" class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white rounded-lg transition-colors duration-200 {% if request.resolver_match.url_name == 'reports' %}bg-gray-700 text-white{% endif %}">
+                    <i class="fas fa-chart-bar mr-3"></i>
+                    Reports & Analytics
+                </a>
+            </div>
+        </div>
+        
+        <!-- Platform Stats Card -->
+        <div class="mx-4 mt-8 p-4 bg-gray-800 rounded-lg">
+            <div class="text-gray-400 text-xs uppercase tracking-wider mb-2">Platform Overview</div>
+            <div class="space-y-2 text-sm">
+                <div class="flex justify-between text-gray-300">
+                    <span>Total Users:</span>
+                    <span class="font-semibold">{{ total_users|default:0 }}</span>
+                </div>
+                <div class="flex justify-between text-gray-300">
+                    <span>Total Deposits:</span>
+                    <span class="font-semibold text-green-400">${{ total_deposits|floatformat:0|default:0 }}</span>
+                </div>
+                <div class="flex justify-between text-gray-300">
+                    <span>Active Investments:</span>
+                    <span class="font-semibold text-blue-400">${{ active_investments|floatformat:0|default:0 }}</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Quick Actions -->
+        <div class="mx-4 mt-4 mb-4 space-y-2">
+            <div class="text-gray-400 text-xs uppercase tracking-wider mb-2">Quick Actions</div>
+            <button onclick="window.location.href='{% url 'admin_panel:manage_users' %}?status=pending'" class="w-full flex items-center justify-center px-3 py-2 bg-yellow-600 hover:bg-yellow-700 text-white text-sm rounded-lg transition-colors">
+                <i class="fas fa-user-check mr-2"></i>
+                Review KYC
+            </button>
+            <button onclick="window.location.href='{% url 'admin_panel:manage_withdrawals' %}?status=pending'" class="w-full flex items-center justify-center px-3 py-2 bg-red-600 hover:bg-red-700 text-white text-sm rounded-lg transition-colors">
+                <i class="fas fa-money-bill-wave mr-2"></i>
+                Process Withdrawals
+            </button>
+        </div>
+    </nav>
+</div>
+
+<!-- Sidebar overlay for mobile -->
+<div id="admin-sidebar-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-20 hidden lg:hidden"></div>
+
+<script>
+// Admin sidebar mobile toggle
+document.addEventListener('DOMContentLoaded', function() {
+    const mobileMenuBtn = document.getElementById('admin-mobile-menu-btn');
+    const sidebar = document.getElementById('admin-sidebar');
+    const overlay = document.getElementById('admin-sidebar-overlay');
+    const userMenuBtn = document.getElementById('admin-user-menu-btn');
+    const userMenu = document.getElementById('admin-user-menu');
+
+    // Mobile menu toggle
+    if (mobileMenuBtn) {
+        mobileMenuBtn.addEventListener('click', function() {
+            sidebar.classList.toggle('-translate-x-full');
+            overlay.classList.toggle('hidden');
+        });
+    }
+
+    // Close sidebar when clicking overlay
+    if (overlay) {
+        overlay.addEventListener('click', function() {
+            sidebar.classList.add('-translate-x-full');
+            overlay.classList.add('hidden');
+        });
+    }
+
+    // User menu toggle
+    if (userMenuBtn && userMenu) {
+        userMenuBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            userMenu.classList.toggle('hidden');
+        });
+
+        // Close user menu when clicking outside
+        document.addEventListener('click', function() {
+            userMenu.classList.add('hidden');
+        });
+    }
+});
+</script>

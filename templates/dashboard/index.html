@@ -1,0 +1,250 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - {{ site_settings.site_name|default:"Investment Platform" }}{% endblock %}
+
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="pt-16 p-6">
+    <!-- Welcome Section -->
+    <div class="mb-8">
+        <h1 class="text-2xl font-bold text-gray-900">Welcome back, {{ user.full_name|default:user.username }}!</h1>
+        <p class="text-gray-600">Here's an overview of your investment portfolio</p>
+    </div>
+    
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center">
+                <div class="p-2 bg-green-100 rounded-lg">
+                    <i class="fas fa-wallet text-green-600"></i>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600">Account Balance</p>
+                    <p class="text-2xl font-bold text-gray-900">${{ profile.account_balance|floatformat:2 }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center">
+                <div class="p-2 bg-blue-100 rounded-lg">
+                    <i class="fas fa-arrow-down text-blue-600"></i>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600">Total Deposits</p>
+                    <p class="text-2xl font-bold text-gray-900">${{ profile.total_deposit|floatformat:2 }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center">
+                <div class="p-2 bg-purple-100 rounded-lg">
+                    <i class="fas fa-chart-pie text-purple-600"></i>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600">Current Investment</p>
+                    <p class="text-2xl font-bold text-gray-900">${{ profile.current_investment|floatformat:2 }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center">
+                <div class="p-2 bg-yellow-100 rounded-lg">
+                    <i class="fas fa-gift text-yellow-600"></i>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600">Total Bonus</p>
+                    <p class="text-2xl font-bold text-gray-900">${{ profile.total_bonus|floatformat:2 }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Quick Actions -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <a href="{% url 'transactions:new_deposit' %}" class="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-900">Make Deposit</h3>
+                    <p class="text-gray-600">Add funds to your account</p>
+                </div>
+                <div class="p-3 bg-green-100 rounded-lg">
+                    <i class="fas fa-plus text-green-600 text-xl"></i>
+                </div>
+            </div>
+        </a>
+        
+        <a href="{% url 'transactions:new_investment' %}" class="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-900">New Investment</h3>
+                    <p class="text-gray-600">Start earning returns</p>
+                </div>
+                <div class="p-3 bg-blue-100 rounded-lg">
+                    <i class="fas fa-chart-line text-blue-600 text-xl"></i>
+                </div>
+            </div>
+        </a>
+        
+        <a href="{% url 'transactions:new_withdrawal' %}" class="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-900">Withdraw Funds</h3>
+                    <p class="text-gray-600">Transfer to your wallet</p>
+                </div>
+                <div class="p-3 bg-red-100 rounded-lg">
+                    <i class="fas fa-arrow-up text-red-600 text-xl"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recent Activity & Active Investments -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Recent Transactions -->
+        <div class="bg-white rounded-lg shadow">
+            <div class="p-6 border-b border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-900">Recent Transactions</h3>
+            </div>
+            <div class="p-6">
+                {% if recent_transactions %}
+                    <div class="space-y-4">
+                        {% for transaction in recent_transactions %}
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center">
+                                    <div class="p-2 rounded-lg
+                                        {% if transaction.transaction_type == 'deposit' %}bg-green-100{% endif %}
+                                        {% if transaction.transaction_type == 'withdrawal' %}bg-red-100{% endif %}
+                                        {% if transaction.transaction_type == 'investment' %}bg-blue-100{% endif %}
+                                        {% if transaction.transaction_type == 'roi' %}bg-purple-100{% endif %}
+                                        {% if transaction.transaction_type == 'bonus' %}bg-yellow-100{% endif %}">
+                                        <i class="fas 
+                                            {% if transaction.transaction_type == 'deposit' %}fa-arrow-down text-green-600{% endif %}
+                                            {% if transaction.transaction_type == 'withdrawal' %}fa-arrow-up text-red-600{% endif %}
+                                            {% if transaction.transaction_type == 'investment' %}fa-chart-pie text-blue-600{% endif %}
+                                            {% if transaction.transaction_type == 'roi' %}fa-coins text-purple-600{% endif %}
+                                            {% if transaction.transaction_type == 'bonus' %}fa-gift text-yellow-600{% endif %}"></i>
+                                    </div>
+                                    <div class="ml-3">
+                                        <p class="text-sm font-medium text-gray-900">{{ transaction.description }}</p>
+                                        <p class="text-xs text-gray-500">{{ transaction.created_at|date:"M d, Y H:i" }}</p>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-sm font-medium 
+                                        {% if transaction.amount > 0 %}text-green-600{% else %}text-red-600{% endif %}">
+                                        {% if transaction.amount > 0 %}+{% endif %} ${{ transaction.amount|floatformat:2 }}
+                                    </p>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                    <div class="mt-4">
+                        <a href="{% url 'transactions:history' %}" class="text-blue-600 hover:text-blue-500 text-sm font-medium">
+                            View all transactions →
+                        </a>
+                    </div>
+                {% else %}
+                    <p class="text-gray-500 text-center py-8">No transactions yet</p>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Active Investments -->
+        <div class="bg-white rounded-lg shadow">
+            <div class="p-6 border-b border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-900">Active Investments</h3>
+            </div>
+            <div class="p-6">
+                {% if active_investments %}
+                    <div class="space-y-4">
+                        {% for investment in active_investments %}
+                            <div class="border border-gray-200 rounded-lg p-4">
+                                <div class="flex justify-between items-start mb-2">
+                                    <h4 class="font-medium text-gray-900">{{ investment.plan.name }}</h4>
+                                    <span class="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">Active</span>
+                                </div>
+                                <div class="grid grid-cols-2 gap-4 text-sm">
+                                    <div>
+                                        <p class="text-gray-600">Amount</p>
+                                        <p class="font-medium">${{ investment.amount|floatformat:2 }}</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-gray-600">Expected Return</p>
+                                        <p class="font-medium text-green-600">${{ investment.expected_return|floatformat:2 }}</p>
+                                    </div>
+                                </div>
+                                <div class="mt-2 text-xs text-gray-500">
+                                    Started: {{ investment.start_date|date:"M d, Y" }} | 
+                                    Ends: {{ investment.end_date|date:"M d, Y" }}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                    <div class="mt-4">
+                        <a href="{% url 'transactions:investments' %}" class="text-blue-600 hover:text-blue-500 text-sm font-medium">
+                            View all investments →
+                        </a>
+                    </div>
+                {% else %}
+                    <div class="text-center py-8">
+                        <i class="fas fa-chart-pie text-gray-400 text-3xl mb-4"></i>
+                        <p class="text-gray-500 mb-4">No active investments</p>
+                        <a href="{% url 'transactions:new_investment' %}" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700">
+                            <i class="fas fa-plus mr-2"></i>
+                            Start Investing
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Referral Link Section -->
+    <div class="mt-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg shadow p-6 text-white">
+        <div class="flex items-center justify-between">
+            <div>
+                <h3 class="text-lg font-semibold mb-2">Refer Friends & Earn</h3>
+                <p class="text-blue-100">Share your referral link and earn {{ site_settings.referral_bonus_percentage|default:"5" }}% bonus on their first deposit</p>
+            </div>
+            <div class="text-right">
+                <p class="text-sm text-blue-100">Your Referral Code</p>
+                <p class="text-xl font-bold">{{ profile.referral_code }}</p>
+            </div>
+        </div>
+        <div class="mt-4 flex items-center space-x-4">
+            <input type="text" 
+                   value="{{ request.build_absolute_uri }}{% url 'accounts:register_step1' %}?ref={{ profile.referral_code }}" 
+                   id="referral-link" 
+                   class="flex-1 px-3 py-2 bg-white bg-opacity-20 border border-white border-opacity-30 rounded text-white placeholder-blue-200 focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50" 
+                   readonly>
+            <button onclick="copyReferralLink()" class="px-4 py-2 bg-white bg-opacity-20 hover:bg-opacity-30 border border-white border-opacity-30 rounded text-white font-medium transition-colors">
+                <i class="fas fa-copy mr-2"></i>Copy
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+function copyReferralLink() {
+    const linkInput = document.getElementById('referral-link');
+    linkInput.select();
+    linkInput.setSelectionRange(0, 99999);
+    document.execCommand('copy');
+    
+    // Show success message
+    const button = event.target.closest('button');
+    const originalText = button.innerHTML;
+    button.innerHTML = '<i class="fas fa-check mr-2"></i>Copied!';
+    button.classList.add('bg-green-500');
+    
+    setTimeout(() => {
+        button.innerHTML = originalText;
+        button.classList.remove('bg-green-500');
+    }, 2000);
+}
+</script>
+{% endblock %}
