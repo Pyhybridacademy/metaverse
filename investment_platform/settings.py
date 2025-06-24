@@ -11,7 +11,7 @@ SECRET_KEY = config('SECRET_KEY', default='django-insecure-9e322^lnlp&dnipw!mrcx
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', default=True, cast=bool)
 
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1', cast=lambda v: [s.strip() for s in v.split(',')])
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1,metaverse-tmb9.onrender.com', cast=lambda v: [s.strip() for s in v.split(',')])
 
 # Application definition
 DJANGO_APPS = [
@@ -160,3 +160,6 @@ LOGGING = {
 CSRF_COOKIE_SECURE = False  # Set to True in production with HTTPS
 CSRF_COOKIE_HTTPONLY = False
 CSRF_COOKIE_SAMESITE = 'Lax'
+
+
+CSRF_TRUSTED_ORIGINS = ['https://metaverse-tmb9.onrender.com']
