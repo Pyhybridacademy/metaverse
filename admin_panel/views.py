@@ -24,6 +24,8 @@ from transactions.models import Deposit, Withdrawal, Investment, Transaction, In
 from accounts.models import KYCDocument, UserProfile, CustomUser
 from core.models import SiteSettings, Testimonial, Certification
 from django.contrib.auth.decorators import login_required, user_passes_test
+from accounts.models import Referral
+from django.db import models
 
 logger = logging.getLogger(__name__)
 
@@ -140,6 +142,7 @@ def get_user_details(request, user_id):
             'profile': {
                 'country': profile.country,
                 'account_balance': float(profile.account_balance),
+                'total_bonus': float(profile.total_bonus),
             }
         }
         
@@ -184,35 +187,281 @@ def edit_user(request, user_id):
 @admin_required
 def edit_balance(request, user_id):
     user = get_object_or_404(User, id=user_id)
-    if request.method == 'POST':
+    
+    if request.method != 'POST':
+        logger.error(f'Invalid request method for edit_balance: {request.method}')
+        return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=400)
+    
+    try:
+        # Log the received data for debugging
+        logger.info(f'Edit balance request for user {user_id}. POST data: {request.POST}')
+        
+        # Get and validate form data
+        account_balance_str = request.POST.get('account_balance')
+        referral_bonus_str = request.POST.get('referral_bonus')
+        adjustment_note = request.POST.get('adjustment_note')
+
+        # Validate required fields
+        if not account_balance_str:
+            logger.error(f'Missing account_balance for user {user_id}')
+            return JsonResponse({'status': 'error', 'message': 'Account balance is required.'}, status=400)
+
+        if not adjustment_note:
+            logger.error(f'Missing adjustment_note for user {user_id}')
+            return JsonResponse({'status': 'error', 'message': 'Adjustment note is required.'}, status=400)
+
+        # Convert balance and bonus to float
         try:
-            with transaction.atomic():
-                new_balance = float(request.POST.get('account_balance'))
-                adjustment_note = request.POST.get('adjustment_note')
-                profile = get_or_create_profile(user)
-                old_balance = profile.account_balance
-                
-                profile.account_balance = new_balance
-                profile.save()
-                
+            new_balance = float(account_balance_str)
+            new_bonus = float(referral_bonus_str) if referral_bonus_str else 0
+        except (ValueError, TypeError) as e:
+            logger.error(f'Invalid balance/bonus value for user {user_id}: balance={account_balance_str}, bonus={referral_bonus_str}. Error: {str(e)}')
+            return JsonResponse({'status': 'error', 'message': 'Invalid balance or bonus value. Please enter valid numbers.'}, status=400)
+
+        # Validate values are not negative
+        if new_balance < 0 or new_bonus < 0:
+            logger.error(f'Negative values attempted for user {user_id}: balance={new_balance}, bonus={new_bonus}')
+            return JsonResponse({'status': 'error', 'message': 'Balance and bonus cannot be negative.'}, status=400)
+
+        # Update balance and bonus in transaction
+        with transaction.atomic():
+            profile = get_or_create_profile(user)
+            old_balance = float(profile.account_balance)
+            old_bonus = float(profile.total_bonus)
+            
+            logger.info(f'Updating balance and bonus for user {user_id}: balance {old_balance} -> {new_balance}, bonus {old_bonus} -> {new_bonus}')
+            
+            profile.account_balance = new_balance
+            profile.total_bonus = new_bonus
+            profile.save()
+            
+            # Create transaction records for changes
+            balance_difference = abs(new_balance - old_balance)
+            bonus_difference = abs(new_bonus - old_bonus)
+            
+            if balance_difference > 0:
+                balance_transaction_type = 'bonus' if new_balance > old_balance else 'adjustment'
                 Transaction.objects.create(
                     user=user,
-                    transaction_type='bonus' if new_balance > old_balance else 'withdrawal',
-                    amount=abs(new_balance - old_balance),
+                    transaction_type=balance_transaction_type,
+                    amount=balance_difference,
                     description=f'Admin balance adjustment: {adjustment_note}',
-                    reference_id=f'admin_adjust_{user.id}'
+                    reference_id=f'admin_balance_{user.id}_{timezone.now().timestamp()}'
                 )
-                
-                messages.success(request, f'Balance for {user.username} updated successfully.')
-                return JsonResponse({'status': 'success'})
-        except ValueError as e:
-            logger.error(f'ValueError editing balance for user {user_id}: {str(e)}')
-            return JsonResponse({'status': 'error', 'message': 'Invalid balance value.'}, status=400)
-        except Exception as e:
-            logger.error(f'Error editing balance for user {user_id}: {str(e)}')
-            return JsonResponse({'status': 'error', 'message': 'An error occurred while updating the balance.'}, status=400)
+            
+            if bonus_difference > 0:
+                bonus_transaction_type = 'referral_bonus' if new_bonus > old_bonus else 'bonus_adjustment'
+                Transaction.objects.create(
+                    user=user,
+                    transaction_type=bonus_transaction_type,
+                    amount=bonus_difference,
+                    description=f'Admin referral bonus adjustment: {adjustment_note}',
+                    reference_id=f'admin_bonus_{user.id}_{timezone.now().timestamp()}'
+                )
+            
+            logger.info(f'Balance and bonus updated successfully for user {user_id}')
+            messages.success(request, f'Balance and referral bonus for {user.username} updated successfully.')
+            return JsonResponse({'status': 'success'})
+            
+    except Exception as e:
+        logger.error(f'Unexpected error editing balance for user {user_id}: {str(e)}', exc_info=True)
+        return JsonResponse({'status': 'error', 'message': f'An error occurred while updating the balance: {str(e)}'}, status=500)
+
+@admin_required
+def edit_referral_bonus(request, user_id):
+    user = get_object_or_404(User, id=user_id)
     
-    return JsonResponse({'status': 'error', 'message': 'Invalid request'}, status=400)
+    if request.method != 'POST':
+        logger.error(f'Invalid request method for edit_referral_bonus: {request.method}')
+        return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=400)
+    
+    try:
+        # Log the received data for debugging
+        logger.info(f'Edit referral bonus request for user {user_id}. POST data: {request.POST}')
+        
+        # Get and validate form data
+        referral_bonus_str = request.POST.get('referral_bonus')
+        adjustment_note = request.POST.get('adjustment_note')
+        
+        # Validate required fields
+        if not referral_bonus_str:
+            logger.error(f'Missing referral_bonus for user {user_id}')
+            return JsonResponse({'status': 'error', 'message': 'Referral bonus amount is required.'}, status=400)
+        
+        if not adjustment_note:
+            logger.error(f'Missing adjustment_note for user {user_id}')
+            return JsonResponse({'status': 'error', 'message': 'Adjustment note is required.'}, status=400)
+        
+        # Convert bonus to float
+        try:
+            new_bonus = float(referral_bonus_str)
+        except (ValueError, TypeError) as e:
+            logger.error(f'Invalid bonus value for user {user_id}: {referral_bonus_str}. Error: {str(e)}')
+            return JsonResponse({'status': 'error', 'message': 'Invalid bonus value. Please enter a valid number.'}, status=400)
+        
+        # Validate bonus is not negative
+        if new_bonus < 0:
+            logger.error(f'Negative bonus attempted for user {user_id}: {new_bonus}')
+            return JsonResponse({'status': 'error', 'message': 'Referral bonus cannot be negative.'}, status=400)
+        
+        # Update bonus in transaction
+        with transaction.atomic():
+            profile = get_or_create_profile(user)
+            old_bonus = float(profile.total_bonus)
+            
+            logger.info(f'Updating referral bonus for user {user_id}: {old_bonus} -> {new_bonus}')
+            
+            profile.total_bonus = new_bonus
+            profile.save()
+            
+            # Create transaction record
+            bonus_difference = abs(new_bonus - old_bonus)
+            transaction_type = 'referral_bonus' if new_bonus > old_bonus else 'bonus_adjustment'
+            
+            Transaction.objects.create(
+                user=user,
+                transaction_type=transaction_type,
+                amount=bonus_difference,
+                description=f'Admin referral bonus adjustment: {adjustment_note}',
+                reference_id=f'admin_ref_bonus_{user.id}_{timezone.now().timestamp()}'
+            )
+            
+            logger.info(f'Referral bonus updated successfully for user {user_id}')
+            messages.success(request, f'Referral bonus for {user.username} updated successfully.')
+            return JsonResponse({'status': 'success'})
+            
+    except Exception as e:
+        logger.error(f'Unexpected error editing referral bonus for user {user_id}: {str(e)}', exc_info=True)
+        return JsonResponse({'status': 'error', 'message': f'An error occurred while updating the referral bonus: {str(e)}'}, status=500)
+
+@admin_required
+def reset_user_balance(request, user_id):
+    """Reset user balance and clear all transactions - DANGEROUS OPERATION"""
+    user = get_object_or_404(User, id=user_id)
+    
+    if request.method != 'POST':
+        logger.error(f'Invalid request method for reset_user_balance: {request.method}')
+        return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=400)
+    
+    try:
+        # Get confirmation and reason
+        confirmation = request.POST.get('confirmation')
+        reset_reason = request.POST.get('reset_reason')
+        
+        # Validate confirmation
+        if confirmation != 'RESET_ALL_DATA':
+            logger.error(f'Invalid confirmation for user {user_id}: {confirmation}')
+            return JsonResponse({'status': 'error', 'message': 'Invalid confirmation. Please type "RESET_ALL_DATA" exactly.'}, status=400)
+        
+        if not reset_reason:
+            logger.error(f'Missing reset_reason for user {user_id}')
+            return JsonResponse({'status': 'error', 'message': 'Reset reason is required.'}, status=400)
+        
+        # Perform reset in transaction
+        with transaction.atomic():
+            profile = get_or_create_profile(user)
+            
+            # Store old values for logging
+            old_data = {
+                'account_balance': float(profile.account_balance),
+                'total_deposit': float(profile.total_deposit),
+                'total_withdrawal': float(profile.total_withdrawal),
+                'total_bonus': float(profile.total_bonus),
+                'current_investment': float(profile.current_investment),
+                'pending_withdrawal': float(profile.pending_withdrawal),
+            }
+            
+            # Get transaction count before deletion
+            transaction_count = Transaction.objects.filter(user=user).count()
+            
+            logger.warning(f'RESET OPERATION INITIATED for user {user_id} by admin {request.user.username}. Reason: {reset_reason}')
+            logger.warning(f'Old data: {old_data}')
+            logger.warning(f'Transactions to be deleted: {transaction_count}')
+            
+            # Delete all transactions for this user
+            Transaction.objects.filter(user=user).delete()
+            
+            # Reset all profile balances to zero
+            profile.account_balance = 0.00
+            profile.total_deposit = 0.00
+            profile.total_withdrawal = 0.00
+            profile.total_bonus = 0.00
+            profile.current_investment = 0.00
+            profile.pending_withdrawal = 0.00
+            profile.save()
+            
+            # Create a reset transaction record for audit trail
+            Transaction.objects.create(
+                user=user,
+                transaction_type='admin_reset',
+                amount=0.00,
+                description=f'ADMIN RESET: All balances and transactions cleared. Reason: {reset_reason}. Previous balance: ${old_data["account_balance"]:.2f}',
+                reference_id=f'admin_reset_{user.id}_{timezone.now().timestamp()}'
+            )
+            
+            # Also reset any active investments to cancelled status
+            active_investments = Investment.objects.filter(user=user, status='active')
+            for investment in active_investments:
+                investment.status = 'cancelled'
+                investment.completed_at = timezone.now()
+                investment.save()
+                logger.warning(f'Investment {investment.id} cancelled during reset for user {user_id}')
+            
+            # Reset any pending deposits/withdrawals
+            Deposit.objects.filter(user=user, status='pending').update(status='cancelled')
+            Withdrawal.objects.filter(user=user, status='pending').update(status='cancelled')
+            
+            logger.warning(f'RESET OPERATION COMPLETED for user {user_id}. All data cleared.')
+            messages.success(request, f'All balances and transactions for {user.username} have been reset successfully.')
+            return JsonResponse({'status': 'success'})
+            
+    except Exception as e:
+        logger.error(f'Unexpected error resetting user {user_id}: {str(e)}', exc_info=True)
+        return JsonResponse({'status': 'error', 'message': f'An error occurred while resetting user data: {str(e)}'}, status=500)
+
+@admin_required
+def get_referral_details(request, user_id):
+    """Get referral details for a user"""
+    try:
+        user = get_object_or_404(User, id=user_id)
+        profile = get_or_create_profile(user)
+        
+        # Get users referred by this user
+        referrals_made = Referral.objects.filter(referrer=user).select_related('referred')
+        
+        # Get who referred this user
+        referral_received = Referral.objects.filter(referred=user).select_related('referrer').first()
+        
+        # Calculate total referral earnings
+        total_referral_earnings = referrals_made.aggregate(
+            total=models.Sum('bonus_amount')
+        )['total'] or 0
+        
+        referrals_data = [{
+            'id': ref.id,
+            'referred_user': ref.referred.username,
+            'referred_email': ref.referred.email,
+            'bonus_amount': float(ref.bonus_amount),
+            'is_paid': ref.is_paid,
+            'created_at': ref.created_at.isoformat()
+        } for ref in referrals_made]
+        
+        return JsonResponse({
+            'status': 'success',
+            'referral_data': {
+                'total_bonus': float(profile.total_bonus),
+                'total_referral_earnings': float(total_referral_earnings),
+                'referrals_count': referrals_made.count(),
+                'referred_by': referral_received.referrer.username if referral_received else None,
+                'referrals_made': referrals_data
+            }
+        })
+    except Exception as e:
+        logger.error(f'Error fetching referral details for user {user_id}: {str(e)}')
+        return JsonResponse({
+            'status': 'error',
+            'message': 'An error occurred while fetching referral details.'
+        }, status=400)
 
 @admin_required
 def send_message(request, user_id):
@@ -1207,3 +1456,23 @@ def export_investments(investments, format_type):
     except Exception as e:
         logger.error(f'Error exporting investments: {str(e)}')
         return HttpResponse('Error exporting investments.', status=500)
+
+@login_required
+@user_passes_test(is_admin)
+def activate_user(request, user_id):
+    """Activate a suspended user."""
+    try:
+        if request.method != 'POST':
+            return JsonResponse({'success': False, 'error': 'Invalid request method'}, status=400)
+        
+        user = get_object_or_404(CustomUser, id=user_id)
+        if user.is_active:
+            return JsonResponse({'success': False, 'error': 'User is already active'}, status=400)
+        
+        user.is_active = True
+        user.save()
+        
+        return JsonResponse({'success': True})
+    except Exception as e:
+        logger.error(f'Error activating user {user_id}: {str(e)}')
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)

@@ -3,97 +3,160 @@
 {% block title %}Register - Step 1 - {{ site_settings.site_name|default:"Investment Platform" }}{% endblock %}
 
 {% block content %}
-<div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+<div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 py-12 px-4 sm:px-6 lg:px-8">
     <div class="max-w-md w-full space-y-8">
-        <div>
-            <div class="mx-auto h-12 w-12 flex items-center justify-center bg-blue-500 rounded-full">
-                <i class="fas fa-user-plus text-white text-xl"></i>
+        <div class="text-center">
+            <div class="mx-auto h-16 w-16 bg-gradient-to-r from-purple-primary to-purple-secondary rounded-full flex items-center justify-center mb-6">
+                <i class="fas fa-user-plus text-white text-2xl"></i>
             </div>
-            <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
-                Create your account
+            <h2 class="text-4xl font-bold text-white mb-2">
+                Create Account
             </h2>
-            <p class="mt-2 text-center text-sm text-gray-600">
-                Step 1 of 2 - Basic Information
-            </p>
+            <p class="text-gray-300 mb-2">Step 1 of 2 - Basic Information</p>
+            <div class="flex justify-center space-x-2 mb-6">
+                <div class="w-8 h-2 bg-purple-primary rounded-full"></div>
+                <div class="w-8 h-2 bg-gray-600 rounded-full"></div>
+            </div>
         </div>
         
-        <form class="mt-8 space-y-6" method="post">
-            {% csrf_token %}
-            <div class="space-y-4">
+        <div class="glass-effect rounded-xl border border-purple-primary border-opacity-30 p-8">
+            <form class="space-y-6" method="post">
+                {% csrf_token %}
+                
                 <div>
-                    <label for="{{ form.username.id_for_label }}" class="block text-sm font-medium text-gray-700">Username</label>
-                    {{ form.username }}
+                    <label for="{{ form.username.id_for_label }}" class="block text-sm font-medium text-gray-300 mb-2">Username</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-user text-gray-400"></i>
+                        </div>
+                        <input type="text" name="username" id="{{ form.username.id_for_label }}" required
+                               class="w-full pl-10 pr-4 py-3 bg-gray-700 bg-opacity-50 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-primary focus:border-transparent transition-all" 
+                               placeholder="Choose a username">
+                    </div>
                     {% if form.username.errors %}
-                        <p class="mt-1 text-sm text-red-600">{{ form.username.errors.0 }}</p>
+                        <p class="mt-1 text-sm text-red-400">{{ form.username.errors.0 }}</p>
                     {% endif %}
                 </div>
                 
                 <div>
-                    <label for="{{ form.full_name.id_for_label }}" class="block text-sm font-medium text-gray-700">Full Name</label>
-                    {{ form.full_name }}
+                    <label for="{{ form.full_name.id_for_label }}" class="block text-sm font-medium text-gray-300 mb-2">Full Name</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-id-card text-gray-400"></i>
+                        </div>
+                        <input type="text" name="full_name" id="{{ form.full_name.id_for_label }}" required
+                               class="w-full pl-10 pr-4 py-3 bg-gray-700 bg-opacity-50 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-primary focus:border-transparent transition-all" 
+                               placeholder="Enter your full name">
+                    </div>
                     {% if form.full_name.errors %}
-                        <p class="mt-1 text-sm text-red-600">{{ form.full_name.errors.0 }}</p>
+                        <p class="mt-1 text-sm text-red-400">{{ form.full_name.errors.0 }}</p>
                     {% endif %}
                 </div>
                 
                 <div>
-                    <label for="{{ form.email.id_for_label }}" class="block text-sm font-medium text-gray-700">Email Address</label>
-                    {{ form.email }}
+                    <label for="{{ form.email.id_for_label }}" class="block text-sm font-medium text-gray-300 mb-2">Email Address</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-envelope text-gray-400"></i>
+                        </div>
+                        <input type="email" name="email" id="{{ form.email.id_for_label }}" required
+                               class="w-full pl-10 pr-4 py-3 bg-gray-700 bg-opacity-50 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-primary focus:border-transparent transition-all" 
+                               placeholder="Enter your email address">
+                    </div>
                     {% if form.email.errors %}
-                        <p class="mt-1 text-sm text-red-600">{{ form.email.errors.0 }}</p>
+                        <p class="mt-1 text-sm text-red-400">{{ form.email.errors.0 }}</p>
                     {% endif %}
                 </div>
                 
                 <div>
-                    <label for="{{ form.usdt_wallet.id_for_label }}" class="block text-sm font-medium text-gray-700">USDT Wallet Address</label>
-                    {{ form.usdt_wallet }}
+                    <label for="{{ form.usdt_wallet.id_for_label }}" class="block text-sm font-medium text-gray-300 mb-2">USDT Wallet Address</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-dollar-sign text-gray-400"></i>
+                        </div>
+                        <input type="text" name="usdt_wallet" id="{{ form.usdt_wallet.id_for_label }}"
+                               class="w-full pl-10 pr-4 py-3 bg-gray-700 bg-opacity-50 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-primary focus:border-transparent transition-all font-mono text-sm" 
+                               placeholder="Enter your USDT wallet address">
+                    </div>
                     {% if form.usdt_wallet.errors %}
-                        <p class="mt-1 text-sm text-red-600">{{ form.usdt_wallet.errors.0 }}</p>
+                        <p class="mt-1 text-sm text-red-400">{{ form.usdt_wallet.errors.0 }}</p>
                     {% endif %}
                 </div>
                 
                 <div>
-                    <label for="{{ form.btc_wallet.id_for_label }}" class="block text-sm font-medium text-gray-700">BTC Wallet Address</label>
-                    {{ form.btc_wallet }}
+                    <label for="{{ form.btc_wallet.id_for_label }}" class="block text-sm font-medium text-gray-300 mb-2">BTC Wallet Address</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fab fa-bitcoin text-gray-400"></i>
+                        </div>
+                        <input type="text" name="btc_wallet" id="{{ form.btc_wallet.id_for_label }}"
+                               class="w-full pl-10 pr-4 py-3 bg-gray-700 bg-opacity-50 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-primary focus:border-transparent transition-all font-mono text-sm" 
+                               placeholder="Enter your BTC wallet address">
+                    </div>
                     {% if form.btc_wallet.errors %}
-                        <p class="mt-1 text-sm text-red-600">{{ form.btc_wallet.errors.0 }}</p>
+                        <p class="mt-1 text-sm text-red-400">{{ form.btc_wallet.errors.0 }}</p>
                     {% endif %}
                 </div>
                 
                 <div>
-                    <label for="{{ form.password1.id_for_label }}" class="block text-sm font-medium text-gray-700">Password</label>
-                    {{ form.password1 }}
+                    <label for="{{ form.password1.id_for_label }}" class="block text-sm font-medium text-gray-300 mb-2">Password</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-lock text-gray-400"></i>
+                        </div>
+                        <input type="password" name="password1" id="{{ form.password1.id_for_label }}" required
+                               class="w-full pl-10 pr-4 py-3 bg-gray-700 bg-opacity-50 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-primary focus:border-transparent transition-all" 
+                               placeholder="Create a strong password">
+                    </div>
                     {% if form.password1.errors %}
-                        <p class="mt-1 text-sm text-red-600">{{ form.password1.errors.0 }}</p>
+                        <p class="mt-1 text-sm text-red-400">{{ form.password1.errors.0 }}</p>
                     {% endif %}
                 </div>
                 
                 <div>
-                    <label for="{{ form.password2.id_for_label }}" class="block text-sm font-medium text-gray-700">Confirm Password</label>
-                    {{ form.password2 }}
+                    <label for="{{ form.password2.id_for_label }}" class="block text-sm font-medium text-gray-300 mb-2">Confirm Password</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-lock text-gray-400"></i>
+                        </div>
+                        <input type="password" name="password2" id="{{ form.password2.id_for_label }}" required
+                               class="w-full pl-10 pr-4 py-3 bg-gray-700 bg-opacity-50 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-primary focus:border-transparent transition-all" 
+                               placeholder="Confirm your password">
+                    </div>
                     {% if form.password2.errors %}
-                        <p class="mt-1 text-sm text-red-600">{{ form.password2.errors.0 }}</p>
+                        <p class="mt-1 text-sm text-red-400">{{ form.password2.errors.0 }}</p>
                     {% endif %}
                 </div>
-            </div>
 
-            <div>
-                <button type="submit" 
-                        class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                    Continue to Step 2
-                    <i class="fas fa-arrow-right ml-2"></i>
-                </button>
+                <div>
+                    <button type="submit" 
+                            class="w-full flex justify-center items-center py-3 px-4 bg-gradient-to-r from-purple-primary to-purple-secondary text-white font-medium rounded-lg hover:from-purple-secondary hover:to-purple-accent transition-all duration-200 card-hover">
+                        Continue to Step 2
+                        <i class="fas fa-arrow-right ml-2"></i>
+                    </button>
+                </div>
+                
+                <div class="text-center">
+                    <p class="text-sm text-gray-400">
+                        Already have an account?
+                        <a href="{% url 'accounts:login' %}" class="font-medium text-purple-400 hover:text-purple-300 transition-colors">
+                            Sign in here
+                        </a>
+                    </p>
+                </div>
+            </form>
+        </div>
+        
+        <!-- Security Notice -->
+        <div class="glass-effect rounded-xl border border-blue-400 border-opacity-30 p-4">
+            <div class="flex items-center">
+                <i class="fas fa-shield-alt text-blue-400 text-xl mr-3"></i>
+                <div>
+                    <p class="text-blue-400 font-medium text-sm">Secure Registration</p>
+                    <p class="text-gray-400 text-xs">Your information is encrypted and protected</p>
+                </div>
             </div>
-            
-            <div class="text-center">
-                <p class="text-sm text-gray-600">
-                    Already have an account?
-                    <a href="{% url 'accounts:login' %}" class="font-medium text-blue-600 hover:text-blue-500">
-                        Sign in here
-                    </a>
-                </p>
-            </div>
-        </form>
+        </div>
     </div>
 </div>
 {% endblock %}

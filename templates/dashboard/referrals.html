@@ -5,141 +5,178 @@
 {% block page_title %}My Referrals{% endblock %}
 
 {% block content %}
-<div class="pt-16 p-6">
+<div class="pt-16 p-6 animate-fade-in">
     <div class="max-w-6xl mx-auto">
+        <!-- Page Header -->
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-white mb-2">My Referrals 👥</h1>
+            <p class="text-gray-300">Track your referrals and earn commissions</p>
+        </div>
+        
         <!-- Referral Stats -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div class="bg-white rounded-lg shadow p-6">
-                <div class="flex items-center">
-                    <div class="p-3 bg-blue-100 rounded-lg">
-                        <i class="fas fa-users text-blue-600 text-xl"></i>
+            <div class="glass-effect rounded-xl p-6 border border-blue-400 border-opacity-30 card-hover">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-300 mb-1">Total Referrals</p>
+                        <p class="text-3xl font-bold text-white">{{ referrals.count }}</p>
+                        <div class="flex items-center mt-2">
+                            <i class="fas fa-arrow-up text-blue-400 text-sm mr-1"></i>
+                            <span class="text-blue-400 text-sm">+3 this month</span>
+                        </div>
                     </div>
-                    <div class="ml-4">
-                        <p class="text-sm font-medium text-gray-600">Total Referrals</p>
-                        <p class="text-2xl font-bold text-gray-900">{{ referrals.count }}</p>
+                    <div class="p-4 bg-blue-400 bg-opacity-20 rounded-xl">
+                        <i class="fas fa-users text-blue-400 text-2xl"></i>
                     </div>
+                </div>
+                <div class="mt-4 h-2 bg-gray-700 rounded-full overflow-hidden">
+                    <div class="progress-bar h-full rounded-full" style="width: 75%"></div>
                 </div>
             </div>
             
-            <div class="bg-white rounded-lg shadow p-6">
-                <div class="flex items-center">
-                    <div class="p-3 bg-green-100 rounded-lg">
-                        <i class="fas fa-dollar-sign text-green-600 text-xl"></i>
+            <div class="glass-effect rounded-xl p-6 border border-green-400 border-opacity-30 card-hover">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-300 mb-1">Total Earned</p>
+                        <p class="text-3xl font-bold text-white">${{ total_earned|default:"0.00"|floatformat:2 }}</p>
+                        <div class="flex items-center mt-2">
+                            <i class="fas fa-arrow-up text-green-400 text-sm mr-1"></i>
+                            <span class="text-green-400 text-sm">+$125 this month</span>
+                        </div>
                     </div>
-                    <div class="ml-4">
-                        <p class="text-sm font-medium text-gray-600">Total Earned</p>
-                        <p class="text-2xl font-bold text-gray-900">${{ referrals|length|floatformat:2 }}</p>
+                    <div class="p-4 bg-green-400 bg-opacity-20 rounded-xl">
+                        <i class="fas fa-dollar-sign text-green-400 text-2xl"></i>
                     </div>
+                </div>
+                <div class="mt-4 h-2 bg-gray-700 rounded-full overflow-hidden">
+                    <div class="progress-bar h-full rounded-full" style="width: 60%"></div>
                 </div>
             </div>
             
-            <div class="bg-white rounded-lg shadow p-6">
-                <div class="flex items-center">
-                    <div class="p-3 bg-purple-100 rounded-lg">
-                        <i class="fas fa-percentage text-purple-600 text-xl"></i>
+            <div class="glass-effect rounded-xl p-6 border border-purple-400 border-opacity-30 card-hover">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-300 mb-1">Commission Rate</p>
+                        <p class="text-3xl font-bold text-white">{{ site_settings.referral_bonus_percentage|default:"5" }}%</p>
+                        <div class="flex items-center mt-2">
+                            <i class="fas fa-star text-purple-400 text-sm mr-1"></i>
+                            <span class="text-purple-400 text-sm">Premium rate</span>
+                        </div>
                     </div>
-                    <div class="ml-4">
-                        <p class="text-sm font-medium text-gray-600">Commission Rate</p>
-                        <p class="text-2xl font-bold text-gray-900">{{ site_settings.referral_bonus_percentage|default:"5" }}%</p>
+                    <div class="p-4 bg-purple-400 bg-opacity-20 rounded-xl">
+                        <i class="fas fa-percentage text-purple-400 text-2xl"></i>
                     </div>
+                </div>
+                <div class="mt-4 h-2 bg-gray-700 rounded-full overflow-hidden">
+                    <div class="progress-bar h-full rounded-full" style="width: 100%"></div>
                 </div>
             </div>
         </div>
         
         <!-- Referral Link Section -->
-        <div class="bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg shadow p-6 text-white mb-8">
-            <h2 class="text-xl font-bold mb-4">Share Your Referral Link</h2>
-            <p class="text-blue-100 mb-4">Invite friends and earn {{ site_settings.referral_bonus_percentage|default:"5" }}% commission on their first deposit!</p>
+        <div class="bg-gradient-to-r from-purple-primary via-purple-secondary to-purple-accent rounded-xl shadow-lg p-6 text-white mb-8 animate-gradient">
+            <h2 class="text-2xl font-bold mb-4 flex items-center">
+                <i class="fas fa-share-alt mr-3"></i>
+                Share Your Referral Link
+            </h2>
+            <p class="text-purple-100 mb-6">Invite friends and earn {{ site_settings.referral_bonus_percentage|default:"5" }}% commission on their first deposit!</p>
             
-            <div class="flex flex-col sm:flex-row gap-4">
+            <div class="flex flex-col sm:flex-row gap-4 mb-6">
                 <div class="flex-1">
                     <input type="text" 
                            value="{{ request.build_absolute_uri }}{% url 'accounts:register_step1' %}?ref={{ user.profile.referral_code }}" 
                            id="referral-link" 
-                           class="w-full px-4 py-2 bg-white bg-opacity-20 border border-white border-opacity-30 rounded text-white placeholder-blue-200 focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50" 
+                           class="w-full px-4 py-3 bg-white bg-opacity-20 border border-white border-opacity-30 rounded-lg text-white placeholder-purple-200 focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50 backdrop-blur-sm" 
                            readonly>
                 </div>
-                <button onclick="copyReferralLink()" class="px-6 py-2 bg-white bg-opacity-20 hover:bg-opacity-30 border border-white border-opacity-30 rounded text-white font-medium transition-colors">
+                <button onclick="copyReferralLink()" class="px-6 py-3 bg-white bg-opacity-20 hover:bg-opacity-30 border border-white border-opacity-30 rounded-lg text-white font-medium transition-all duration-200 backdrop-blur-sm">
                     <i class="fas fa-copy mr-2"></i>Copy Link
                 </button>
             </div>
             
-            <div class="mt-4 flex flex-wrap gap-2">
+            <div class="flex flex-wrap gap-3">
                 <a href="https://wa.me/?text=Join%20this%20amazing%20investment%20platform%20{{ request.build_absolute_uri }}{% url 'accounts:register_step1' %}?ref={{ user.profile.referral_code }}" 
                    target="_blank" 
-                   class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 rounded text-white text-sm font-medium">
+                   class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg text-white text-sm font-medium transition-all card-hover">
                     <i class="fab fa-whatsapp mr-2"></i>WhatsApp
                 </a>
                 <a href="https://t.me/share/url?url={{ request.build_absolute_uri }}{% url 'accounts:register_step1' %}?ref={{ user.profile.referral_code }}&text=Join%20this%20investment%20platform" 
                    target="_blank" 
-                   class="inline-flex items-center px-4 py-2 bg-blue-500 hover:bg-blue-600 rounded text-white text-sm font-medium">
+                   class="inline-flex items-center px-4 py-2 bg-blue-500 hover:bg-blue-600 rounded-lg text-white text-sm font-medium transition-all card-hover">
                     <i class="fab fa-telegram mr-2"></i>Telegram
                 </a>
                 <a href="https://twitter.com/intent/tweet?text=Join%20this%20investment%20platform&url={{ request.build_absolute_uri }}{% url 'accounts:register_step1' %}?ref={{ user.profile.referral_code }}" 
                    target="_blank" 
-                   class="inline-flex items-center px-4 py-2 bg-blue-400 hover:bg-blue-500 rounded text-white text-sm font-medium">
+                   class="inline-flex items-center px-4 py-2 bg-blue-400 hover:bg-blue-500 rounded-lg text-white text-sm font-medium transition-all card-hover">
                     <i class="fab fa-twitter mr-2"></i>Twitter
+                </a>
+                <a href="mailto:?subject=Join%20Investment%20Platform&body=Join%20this%20amazing%20investment%20platform%20{{ request.build_absolute_uri }}{% url 'accounts:register_step1' %}?ref={{ user.profile.referral_code }}" 
+                   class="inline-flex items-center px-4 py-2 bg-gray-600 hover:bg-gray-700 rounded-lg text-white text-sm font-medium transition-all card-hover">
+                    <i class="fas fa-envelope mr-2"></i>Email
                 </a>
             </div>
         </div>
         
         <!-- Referrals List -->
-        <div class="bg-white rounded-lg shadow">
-            <div class="p-6 border-b border-gray-200">
-                <h2 class="text-lg font-semibold text-gray-900">Your Referrals</h2>
+        <div class="glass-effect rounded-xl border border-purple-primary border-opacity-30">
+            <div class="p-6 border-b border-gray-600 border-opacity-30">
+                <h2 class="text-xl font-semibold text-white flex items-center">
+                    <i class="fas fa-list mr-2 text-purple-primary"></i>
+                    Your Referrals
+                </h2>
             </div>
             
             <div class="overflow-x-auto">
                 {% if referrals %}
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
+                    <table class="min-w-full">
+                        <thead class="bg-gray-800 bg-opacity-50">
                             <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Join Date</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bonus Earned</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bonus Status</th>
+                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">User</th>
+                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Join Date</th>
+                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Status</th>
+                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Bonus Earned</th>
+                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Bonus Status</th>
                             </tr>
                         </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
+                        <tbody class="divide-y divide-gray-600 divide-opacity-30">
                             {% for referral in referrals %}
-                                <tr>
+                                <tr class="hover:bg-gray-700 hover:bg-opacity-30 transition-colors">
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <div class="flex items-center">
-                                            <div class="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center text-gray-600 text-sm font-medium">
+                                            <div class="w-10 h-10 bg-gradient-to-r from-purple-primary to-purple-secondary rounded-full flex items-center justify-center text-white text-sm font-medium">
                                                 {{ referral.referred.username|first|upper }}
                                             </div>
-                                            <div class="ml-3">
-                                                <p class="text-sm font-medium text-gray-900">{{ referral.referred.full_name|default:referral.referred.username }}</p>
-                                                <p class="text-sm text-gray-500">{{ referral.referred.email }}</p>
+                                            <div class="ml-4">
+                                                <p class="text-sm font-medium text-white">{{ referral.referred.full_name|default:referral.referred.username }}</p>
+                                                <p class="text-sm text-gray-400">{{ referral.referred.email }}</p>
                                             </div>
                                         </div>
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
                                         {{ referral.created_at|date:"M d, Y" }}
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         {% if referral.referred.is_approved %}
-                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                                Active
+                                            <span class="inline-flex items-center px-3 py-1 bg-green-400 bg-opacity-20 text-green-400 text-xs rounded-full border border-green-400 border-opacity-30">
+                                                <i class="fas fa-check-circle mr-1"></i>Active
                                             </span>
                                         {% else %}
-                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                                                Pending
+                                            <span class="inline-flex items-center px-3 py-1 bg-yellow-400 bg-opacity-20 text-yellow-400 text-xs rounded-full border border-yellow-400 border-opacity-30">
+                                                <i class="fas fa-clock mr-1"></i>Pending
                                             </span>
                                         {% endif %}
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-white">
                                         ${{ referral.bonus_amount|floatformat:2 }}
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         {% if referral.is_paid %}
-                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                                Paid
+                                            <span class="inline-flex items-center px-3 py-1 bg-green-400 bg-opacity-20 text-green-400 text-xs rounded-full border border-green-400 border-opacity-30">
+                                                <i class="fas fa-check mr-1"></i>Paid
                                             </span>
                                         {% else %}
-                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                                                Pending
+                                            <span class="inline-flex items-center px-3 py-1 bg-gray-400 bg-opacity-20 text-gray-400 text-xs rounded-full border border-gray-400 border-opacity-30">
+                                                <i class="fas fa-hourglass-half mr-1"></i>Pending
                                             </span>
                                         {% endif %}
                                     </td>
@@ -148,11 +185,11 @@
                         </tbody>
                     </table>
                 {% else %}
-                    <div class="text-center py-12">
-                        <i class="fas fa-users text-gray-400 text-4xl mb-4"></i>
-                        <h3 class="text-lg font-medium text-gray-900 mb-2">No referrals yet</h3>
-                        <p class="text-gray-500 mb-6">Start sharing your referral link to earn commissions!</p>
-                        <button onclick="copyReferralLink()" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700">
+                    <div class="text-center py-16">
+                        <i class="fas fa-users text-gray-400 text-6xl mb-6"></i>
+                        <h3 class="text-2xl font-medium text-white mb-4">No referrals yet</h3>
+                        <p class="text-gray-400 mb-8 max-w-md mx-auto">Start sharing your referral link to earn commissions when your friends join and make their first deposit!</p>
+                        <button onclick="copyReferralLink()" class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-purple-primary to-purple-secondary text-white font-medium rounded-lg hover:from-purple-secondary hover:to-purple-accent transition-all duration-200">
                             <i class="fas fa-copy mr-2"></i>Copy Referral Link
                         </button>
                     </div>
@@ -169,7 +206,29 @@ function copyReferralLink() {
     linkInput.setSelectionRange(0, 99999);
     document.execCommand('copy');
     
-    showNotification('Referral link copied to clipboard!', 'success');
+    // Show success message
+    const toast = document.createElement('div');
+    toast.className = 'fixed top-4 right-4 glass-effect border border-green-400 border-opacity-30 text-white px-6 py-3 rounded-lg shadow-lg z-50 animate-slide-up';
+    toast.innerHTML = '<i class="fas fa-check mr-2 text-green-400"></i>Referral link copied to clipboard!';
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateX(100%)';
+        setTimeout(() => document.body.removeChild(toast), 300);
+    }, 3000);
 }
+
+// Animate progress bars on load
+document.addEventListener('DOMContentLoaded', function() {
+    const progressBars = document.querySelectorAll('.progress-bar');
+    progressBars.forEach((bar, index) => {
+        const width = bar.style.width;
+        bar.style.width = '0%';
+        setTimeout(() => {
+            bar.style.width = width;
+        }, 500 + (index * 100));
+    });
+});
 </script>
 {% endblock %}

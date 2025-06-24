@@ -5,103 +5,138 @@
 {% block page_title %}New Investment{% endblock %}
 
 {% block content %}
-<div class="pt-16 p-6">
-    <div class="max-w-4xl mx-auto">
+<div class="pt-16 p-6 animate-fade-in">
+    <div class="max-w-6xl mx-auto">
         <!-- Page Header -->
-        <div class="mb-8">
-            <h1 class="text-2xl font-bold text-gray-900">Start New Investment</h1>
-            <p class="text-gray-600">Choose an investment plan and start earning returns</p>
+        <div class="mb-8 text-center">
+            <h1 class="text-3xl font-bold text-white mb-2">Start New Investment 📈</h1>
+            <p class="text-gray-300">Choose an investment plan and start earning returns on your capital</p>
         </div>
         
         <!-- Account Balance -->
-        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-8">
-            <div class="flex items-center">
-                <i class="fas fa-wallet text-blue-600 mr-3"></i>
-                <div>
-                    <p class="text-sm text-blue-800">Available Balance</p>
-                    <p class="text-xl font-bold text-blue-900">${{ user.profile.account_balance|floatformat:2 }}</p>
+        <div class="glass-effect rounded-xl border border-blue-400 border-opacity-30 p-6 mb-8">
+            <div class="flex items-center justify-center">
+                <div class="text-center">
+                    <div class="flex items-center justify-center mb-3">
+                        <i class="fas fa-wallet text-blue-400 text-2xl mr-3"></i>
+                        <div>
+                            <p class="text-sm text-blue-300">Available Balance</p>
+                            <p class="text-3xl font-bold text-white">${{ user.profile.account_balance|floatformat:2 }}</p>
+                        </div>
+                    </div>
+                    <p class="text-gray-400 text-sm">Ready to invest and grow your portfolio</p>
                 </div>
             </div>
         </div>
         
         <!-- Investment Plans -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-            {% for plan in investment_plans %}
-                <div class="bg-white rounded-lg shadow-lg overflow-hidden border-2 border-transparent hover:border-blue-500 transition-colors">
-                    <div class="p-6">
-                        <div class="text-center mb-4">
-                            <h3 class="text-xl font-bold text-gray-900">{{ plan.name }}</h3>
-                            <p class="text-gray-600 mt-2">{{ plan.description }}</p>
-                        </div>
-                        
-                        <div class="space-y-3 mb-6">
-                            <div class="flex justify-between">
-                                <span class="text-gray-600">Minimum:</span>
-                                <span class="font-semibold">${{ plan.minimum_amount|floatformat:2 }}</span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span class="text-gray-600">Maximum:</span>
-                                <span class="font-semibold">${{ plan.maximum_amount|floatformat:2 }}</span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span class="text-gray-600">ROI:</span>
-                                <span class="font-semibold text-green-600">{{ plan.roi_percentage }}%</span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span class="text-gray-600">Duration:</span>
-                                <span class="font-semibold">{{ plan.duration_days }} days</span>
+        <div class="mb-8">
+            <h2 class="text-2xl font-semibold text-white mb-6 text-center">Choose Your Investment Plan</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {% for plan in investment_plans %}
+                    <div class="glass-effect rounded-xl border border-purple-primary border-opacity-30 overflow-hidden card-hover group cursor-pointer" onclick="selectPlan({{ plan.id }}, '{{ plan.name }}', {{ plan.minimum_amount }}, {{ plan.maximum_amount }}, {{ plan.roi_percentage }})">
+                        <div class="bg-gradient-to-r from-purple-primary to-purple-secondary p-6">
+                            <div class="text-center">
+                                <div class="w-16 h-16 bg-white bg-opacity-20 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <i class="fas fa-chart-line text-white text-2xl"></i>
+                                </div>
+                                <h3 class="text-2xl font-bold text-white">{{ plan.name }}</h3>
+                                <p class="text-purple-100 mt-2">{{ plan.description }}</p>
                             </div>
                         </div>
                         
-                        <button onclick="selectPlan({{ plan.id }}, '{{ plan.name }}', {{ plan.minimum_amount }}, {{ plan.maximum_amount }}, {{ plan.roi_percentage }})" 
-                                class="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors">
-                            Select Plan
-                        </button>
+                        <div class="p-6">
+                            <div class="space-y-4 mb-6">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-gray-400">Minimum Investment:</span>
+                                    <span class="font-bold text-white">${{ plan.minimum_amount|floatformat:2 }}</span>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-gray-400">Maximum Investment:</span>
+                                    <span class="font-bold text-white">${{ plan.maximum_amount|floatformat:2 }}</span>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-gray-400">ROI Percentage:</span>
+                                    <span class="font-bold text-green-400 text-xl">{{ plan.roi_percentage }}%</span>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-gray-400">Investment Period:</span>
+                                    <span class="font-bold text-white">{{ plan.duration_days }} days</span>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-gray-800 bg-opacity-50 rounded-lg p-4 mb-4">
+                                <div class="text-center">
+                                    <p class="text-gray-400 text-sm">Potential Return on $1,000</p>
+                                    <p class="text-2xl font-bold text-green-400">${{ 1000|add:plan.roi_percentage|mul:10 }}</p>
+                                </div>
+                            </div>
+                            
+                            <button type="button" class="w-full bg-gradient-to-r from-purple-primary to-purple-secondary text-white py-3 px-4 rounded-lg hover:from-purple-secondary hover:to-purple-accent transition-all duration-200 group-hover:scale-105">
+                                Select This Plan
+                            </button>
+                        </div>
                     </div>
-                </div>
-            {% endfor %}
+                {% endfor %}
+            </div>
         </div>
         
         <!-- Investment Form -->
-        <div class="bg-white rounded-lg shadow" id="investment-form" style="display: none;">
-            <div class="p-6 border-b border-gray-200">
-                <h2 class="text-lg font-semibold text-gray-900">Investment Details</h2>
-                <p class="text-gray-600" id="selected-plan-info"></p>
+        <div class="glass-effect rounded-xl border border-purple-primary border-opacity-30 overflow-hidden" id="investment-form" style="display: none;">
+            <div class="p-6 border-b border-gray-600 border-opacity-30">
+                <h2 class="text-xl font-semibold text-white flex items-center">
+                    <i class="fas fa-chart-pie mr-2 text-purple-primary"></i>
+                    Investment Details
+                </h2>
+                <p class="text-gray-400 mt-1" id="selected-plan-info"></p>
             </div>
             
             <form method="post" class="p-6">
                 {% csrf_token %}
                 <div class="space-y-6">
                     <div>
-                        <label for="{{ form.plan.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
-                            Investment Plan
+                        <label for="{{ form.plan.id_for_label }}" class="block text-sm font-medium text-gray-300 mb-2">
+                            Selected Investment Plan
                         </label>
-                        {{ form.plan }}
+                        <select name="plan" id="{{ form.plan.id_for_label }}" 
+                                class="w-full px-4 py-3 bg-gray-700 bg-opacity-50 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-primary focus:border-transparent transition-all">
+                            <option value="">Select a plan</option>
+                            {% for plan in investment_plans %}
+                                <option value="{{ plan.id }}">{{ plan.name }} - {{ plan.roi_percentage }}% ROI</option>
+                            {% endfor %}
+                        </select>
                         {% if form.plan.errors %}
-                            <p class="mt-1 text-sm text-red-600">{{ form.plan.errors.0 }}</p>
+                            <p class="mt-1 text-sm text-red-400">{{ form.plan.errors.0 }}</p>
                         {% endif %}
                     </div>
                     
                     <div>
-                        <label for="{{ form.amount.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        <label for="{{ form.amount.id_for_label }}" class="block text-sm font-medium text-gray-300 mb-2">
                             Investment Amount (USD)
                         </label>
-                        {{ form.amount }}
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <span class="text-gray-400 text-lg">$</span>
+                            </div>
+                            <input type="number" name="amount" id="{{ form.amount.id_for_label }}" step="0.01" 
+                                   class="w-full pl-8 pr-4 py-3 bg-gray-700 bg-opacity-50 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-primary focus:border-transparent transition-all" 
+                                   placeholder="Enter investment amount">
+                        </div>
                         {% if form.amount.errors %}
-                            <p class="mt-1 text-sm text-red-600">{{ form.amount.errors.0 }}</p>
+                            <p class="mt-1 text-sm text-red-400">{{ form.amount.errors.0 }}</p>
                         {% endif %}
-                        <div class="mt-2 text-sm text-gray-600">
+                        <div class="mt-2 text-sm text-gray-400">
                             <p id="amount-range"></p>
-                            <p id="expected-return" class="font-semibold text-green-600"></p>
+                            <p id="expected-return" class="font-semibold text-green-400 text-lg"></p>
                         </div>
                     </div>
                 </div>
                 
-                <div class="mt-8 flex justify-between">
-                    <button type="button" onclick="hideForm()" class="px-4 py-2 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50">
+                <div class="mt-8 flex flex-col sm:flex-row gap-4">
+                    <button type="button" onclick="hideForm()" class="flex-1 px-6 py-3 glass-effect border border-gray-600 text-gray-300 font-medium rounded-lg hover:border-purple-primary hover:text-white transition-all">
                         Cancel
                     </button>
-                    <button type="submit" class="px-6 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700">
+                    <button type="submit" class="flex-1 px-6 py-3 bg-gradient-to-r from-purple-primary to-purple-secondary text-white font-medium rounded-lg hover:from-purple-secondary hover:to-purple-accent transition-all duration-200">
                         Confirm Investment
                     </button>
                 </div>
@@ -109,20 +144,44 @@
         </div>
         
         <!-- Investment Calculator -->
-        <div class="mt-8 bg-gray-50 rounded-lg p-6">
-            <h3 class="text-lg font-semibold text-gray-900 mb-4">Investment Calculator</h3>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="mt-8 glass-effect rounded-xl border border-blue-400 border-opacity-30 p-6">
+            <h3 class="text-xl font-semibold text-white mb-6 flex items-center">
+                <i class="fas fa-calculator mr-2 text-blue-400"></i>
+                Investment Calculator
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Amount</label>
-                    <input type="number" id="calc-amount" class="w-full px-3 py-2 border border-gray-300 rounded-lg" placeholder="Enter amount">
+                    <label class="block text-sm font-medium text-gray-300 mb-2">Investment Amount</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <span class="text-gray-400">$</span>
+                        </div>
+                        <input type="number" id="calc-amount" 
+                               class="w-full pl-8 pr-4 py-3 bg-gray-700 bg-opacity-50 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all" 
+                               placeholder="Enter amount">
+                    </div>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">ROI %</label>
-                    <input type="number" id="calc-roi" class="w-full px-3 py-2 border border-gray-300 rounded-lg" placeholder="Enter ROI">
+                    <label class="block text-sm font-medium text-gray-300 mb-2">ROI Percentage</label>
+                    <div class="relative">
+                        <input type="number" id="calc-roi" 
+                               class="w-full px-4 py-3 bg-gray-700 bg-opacity-50 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all" 
+                               placeholder="Enter ROI %">
+                        <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                            <span class="text-gray-400">%</span>
+                        </div>
+                    </div>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Expected Return</label>
-                    <input type="text" id="calc-return" class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100" readonly>
+                    <label class="block text-sm font-medium text-gray-300 mb-2">Expected Return</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <span class="text-gray-400">$</span>
+                        </div>
+                        <input type="text" id="calc-return" 
+                               class="w-full pl-8 pr-4 py-3 bg-gray-700 bg-opacity-50 border border-gray-600 rounded-lg text-green-400 font-bold" 
+                               readonly placeholder="0.00">
+                    </div>
                 </div>
             </div>
         </div>
@@ -144,7 +203,7 @@ function selectPlan(planId, planName, minAmount, maxAmount, roiPercentage) {
     // Update form
     document.getElementById('{{ form.plan.id_for_label }}').value = planId;
     document.getElementById('selected-plan-info').textContent = `Selected: ${planName} (${roiPercentage}% ROI)`;
-    document.getElementById('amount-range').textContent = `Amount range: $${minAmount} - $${maxAmount}`;
+    document.getElementById('amount-range').textContent = `Investment range: $${minAmount.toLocaleString()} - $${maxAmount.toLocaleString()}`;
     
     // Show form
     document.getElementById('investment-form').style.display = 'block';
@@ -168,7 +227,7 @@ function updateExpectedReturn() {
     if (amount > 0) {
         const roiAmount = (amount * selectedPlan.roi) / 100;
         const totalReturn = amount + roiAmount;
-        document.getElementById('expected-return').textContent = `Expected return: $${totalReturn.toFixed(2)} (Profit: $${roiAmount.toFixed(2)})`;
+        document.getElementById('expected-return').textContent = `Expected return: $${totalReturn.toLocaleString()} (Profit: $${roiAmount.toLocaleString()})`;
     } else {
         document.getElementById('expected-return').textContent = '';
     }
@@ -182,7 +241,7 @@ function updateCalculator() {
     if (amount > 0 && roi > 0) {
         const roiAmount = (amount * roi) / 100;
         const totalReturn = amount + roiAmount;
-        document.getElementById('calc-return').value = `$${totalReturn.toFixed(2)}`;
+        document.getElementById('calc-return').value = totalReturn.toLocaleString();
     } else {
         document.getElementById('calc-return').value = '';
     }

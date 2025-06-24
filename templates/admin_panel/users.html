@@ -226,7 +226,7 @@
 </div>
 
 <script>
-// Utility to get CSRF token
+// User Management Functions
 function getCookie(name) {
     let cookieValue = null;
     if (document.cookie && document.cookie !== '') {
@@ -257,6 +257,12 @@ function toggleUserMenu(userId) {
 function viewUserDetails(userId) {
     const modal = document.getElementById('userDetailsModal');
     const content = document.getElementById('userDetailsContent');
+    
+    if (!modal || !content) {
+        console.error('Modal elements not found');
+        return;
+    }
+    
     modal.classList.remove('hidden');
     
     // Show loading
@@ -267,135 +273,203 @@ function viewUserDetails(userId) {
         </div>
     `;
     
+    // Updated URL to match the new pattern
     fetch(`/admin-panel/users/details/${userId}/`, {
         method: 'GET',
         headers: {
             'X-CSRFToken': getCookie('csrftoken'),
             'Accept': 'application/json',
+            'Content-Type': 'application/json',
         },
     })
-    .then(response => response.json())
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
     .then(data => {
         if (data.status === 'success') {
             const user = data.user;
             const transactions = data.transactions;
             content.innerHTML = `
-                <div class="space-y-6">
-                    <!-- User Information -->
+    <div class="space-y-6">
+        <!-- User Information -->
+        <div>
+            <h4 class="text-lg font-semibold text-gray-800 mb-4">User Information</h4>
+            <form id="editUserForm" onsubmit="editUser(event, ${user.id}); return false;">
+                <input type="hidden" name="csrfmiddlewaretoken" value="${getCookie('csrftoken')}">
+                <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <h4 class="text-lg font-semibold text-gray-800 mb-4">User Information</h4>
-                        <form id="editUserForm" onsubmit="editUser(event, ${user.id}); return false;">
-                            <input type="hidden" name="csrfmiddlewaretoken" value="${getCookie('csrftoken')}">
-                            <div class="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700">Username</label>
-                                    <input type="text" name="username" value="${user.username}" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100" readonly>
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700">Full Name</label>
-                                    <input type="text" name="full_name" value="${user.full_name || ''}" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg">
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700">Email</label>
-                                    <input type="email" name="email" value="${user.email}" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg">
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700">Country</label>
-                                    <input type="text" name="country" value="${user.profile.country || ''}" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg">
-                                </div>
-                            </div>
-                            <div class="mt-4">
-                                <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Save Changes</button>
-                            </div>
-                        </form>
-                        <div id="editUserStatus" class="mt-2 text-sm"></div>
+                        <label class="block text-sm font-medium text-gray-700">Username</label>
+                        <input type="text" name="username" value="${user.username}" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100" readonly>
                     </div>
-                    
-                    <!-- Balance Management -->
                     <div>
-                        <h4 class="text-lg font-semibold text-gray-800 mb-4">Balance Management</h4>
-                        <form id="editBalanceForm" onsubmit="editBalance(event, ${user.id}); return false;">
-                            <input type="hidden" name="csrfmiddlewaretoken" value="${getCookie('csrftoken')}">
-                            <div class="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700">Current Balance</label>
-                                    <input type="number" name="account_balance" value="${user.profile.account_balance}" step="0.01" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg">
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700">Adjustment Note</label>
-                                    <input type="text" name="adjustment_note" placeholder="Reason for balance change" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg" required>
-                                </div>
-                            </div>
-                            <div class="mt-4">
-                                <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">Update Balance</button>
-                            </div>
-                        </form>
-                        <div id="editBalanceStatus" class="mt-2 text-sm"></div>
+                        <label class="block text-sm font-medium text-gray-700">Full Name</label>
+                        <input type="text" name="full_name" value="${user.full_name || ''}" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg">
                     </div>
-                    
-                    <!-- Send Message -->
                     <div>
-                        <h4 class="text-lg font-semibold text-gray-800 mb-4">Send Email</h4>
-                        <form id="messageForm" onsubmit="sendMessage(event, ${user.id}); return false;">
-                            <input type="hidden" name="csrfmiddlewaretoken" value="${getCookie('csrftoken')}">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700">Subject</label>
-                                <input type="text" name="subject" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg" required>
-                            </div>
-                            <div class="mt-4">
-                                <label class="block text-sm font-medium text-gray-700">Message</label>
-                                <textarea name="message" rows="4" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg" required></textarea>
-                            </div>
-                            <div class="mt-4">
-                                <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Send Message</button>
-                            </div>
-                        </form>
-                        <div id="messageStatus" class="mt-2 text-sm"></div>
+                        <label class="block text-sm font-medium text-gray-700">Email</label>
+                        <input type="email" name="email" value="${user.email}" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg">
                     </div>
-                    
-                    <!-- Recent Transactions -->
                     <div>
-                        <h4 class="text-lg font-semibold text-gray-800 mb-4">Recent Transactions</h4>
-                        <div class="overflow-x-auto">
-                            <table class="min-w-full divide-y divide-gray-200">
-                                <thead class="bg-gray-50">
-                                    <tr>
-                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
-                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
-                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
-                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Description</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="bg-white divide-y divide-gray-200">
-                                    ${transactions.length > 0 ? transactions.map(t => `
-                                        <tr>
-                                            <td class="px-4 py-2 text-sm capitalize">${t.transaction_type}</td>
-                                            <td class="px-4 py-2 text-sm">$${parseFloat(t.amount).toFixed(2)}</td>
-                                            <td class="px-4 py-2 text-sm">${new Date(t.created_at).toLocaleDateString()}</td>
-                                            <td class="px-4 py-2 text-sm">${t.description}</td>
-                                        </tr>
-                                    `).join('') : '<tr><td colspan="4" class="px-4 py-2 text-sm text-center text-gray-500">No transactions found</td></tr>'}
-                                </tbody>
-                            </table>
-                        </div>
-                        <div class="mt-4">
-                            <a href="/admin-panel/users/view-transactions/${user.id}/" class="text-blue-600 hover:text-blue-900">View All Transactions →</a>
-                        </div>
-                    </div>
-                    
-                    <!-- Actions -->
-                    <div class="flex space-x-4 pt-4 border-t">
-                        <a href="/admin-panel/users/login-as/${user.id}/" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">Login as User</a>
-                        <button onclick="closeUserDetails()" class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700">Close</button>
+                        <label class="block text-sm font-medium text-gray-700">Country</label>
+                        <input type="text" name="country" value="${user.profile.country || ''}" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg">
                     </div>
                 </div>
-            `;
+                <div class="mt-4">
+                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Save Changes</button>
+                </div>
+            </form>
+            <div id="editUserStatus" class="mt-2 text-sm"></div>
+        </div>
+        
+        <!-- Balance Management -->
+        <div>
+            <h4 class="text-lg font-semibold text-gray-800 mb-4">Balance Management</h4>
+            <form id="editBalanceForm" onsubmit="editBalance(event, ${user.id}); return false;">
+                <input type="hidden" name="csrfmiddlewaretoken" value="${getCookie('csrftoken')}">
+                <div class="grid grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Current Balance</label>
+                        <input type="number" name="account_balance" value="${user.profile.account_balance}" step="0.01" min="0" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Referral Bonus</label>
+                        <input type="number" name="referral_bonus" value="${user.profile.total_bonus || 0}" step="0.01" min="0" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Adjustment Note</label>
+                        <input type="text" name="adjustment_note" placeholder="Reason for balance change" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg" required>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">Update Balance & Bonus</button>
+                </div>
+            </form>
+            <div id="editBalanceStatus" class="mt-2 text-sm"></div>
+        </div>
+        
+        <!-- Referral Information -->
+        <div>
+            <h4 class="text-lg font-semibold text-gray-800 mb-4">Referral Information</h4>
+            <div id="referralInfo" class="bg-gray-50 p-4 rounded-lg">
+                <div class="text-center py-4">
+                    <i class="fas fa-spinner fa-spin text-gray-400 text-lg mb-2"></i>
+                    <p class="text-gray-500">Loading referral details...</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Reset Balance Section -->
+        <div class="border-2 border-red-200 rounded-lg p-4 bg-red-50">
+            <h4 class="text-lg font-semibold text-red-800 mb-4 flex items-center">
+                <i class="fas fa-exclamation-triangle mr-2"></i>
+                Danger Zone - Reset All Data
+            </h4>
+            <div class="bg-white p-4 rounded border border-red-300">
+                <p class="text-sm text-red-700 mb-4">
+                    <strong>WARNING:</strong> This action will permanently delete ALL transactions and reset ALL balances to zero. 
+                    This includes account balance, deposits, withdrawals, bonuses, and investments. This action cannot be undone.
+                </p>
+                <form id="resetBalanceForm" onsubmit="resetUserBalance(event, ${user.id}); return false;">
+                    <input type="hidden" name="csrfmiddlewaretoken" value="${getCookie('csrftoken')}">
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-sm font-medium text-red-700">Reason for Reset (Required)</label>
+                            <textarea name="reset_reason" rows="2" placeholder="Explain why you are resetting this user's data..." class="mt-1 w-full px-3 py-2 border border-red-300 rounded-lg focus:ring-2 focus:ring-red-500" required></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-red-700">Type "RESET_ALL_DATA" to confirm</label>
+                            <input type="text" name="confirmation" placeholder="RESET_ALL_DATA" class="mt-1 w-full px-3 py-2 border border-red-300 rounded-lg focus:ring-2 focus:ring-red-500" required>
+                        </div>
+                    </div>
+                    <div class="mt-4 flex space-x-3">
+                        <button type="submit" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 focus:ring-2 focus:ring-red-500">
+                            <i class="fas fa-trash mr-2"></i>Reset All Data
+                        </button>
+                        <button type="button" onclick="document.getElementById('resetBalanceForm').reset()" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400">
+                            Cancel
+                        </button>
+                    </div>
+                </form>
+                <div id="resetBalanceStatus" class="mt-2 text-sm"></div>
+            </div>
+        </div>
+        
+        <!-- Send Message -->
+        <div>
+            <h4 class="text-lg font-semibold text-gray-800 mb-4">Send Email</h4>
+            <form id="messageForm" onsubmit="sendMessage(event, ${user.id}); return false;">
+                <input type="hidden" name="csrfmiddlewaretoken" value="${getCookie('csrftoken')}">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Subject</label>
+                    <input type="text" name="subject" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg" required>
+                </div>
+                <div class="mt-4">
+                    <label class="block text-sm font-medium text-gray-700">Message</label>
+                    <textarea name="message" rows="4" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg" required></textarea>
+                </div>
+                <div class="mt-4">
+                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Send Message</button>
+                </div>
+            </form>
+            <div id="messageStatus" class="mt-2 text-sm"></div>
+        </div>
+        
+        <!-- Recent Transactions -->
+        <div>
+            <h4 class="text-lg font-semibold text-gray-800 mb-4">Recent Transactions</h4>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
+                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
+                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Description</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        ${transactions.length > 0 ? transactions.map(t => `
+                            <tr>
+                                <td class="px-4 py-2 text-sm capitalize">${t.transaction_type}</td>
+                                <td class="px-4 py-2 text-sm">$${parseFloat(t.amount).toFixed(2)}</td>
+                                <td class="px-4 py-2 text-sm">${new Date(t.created_at).toLocaleDateString()}</td>
+                                <td class="px-4 py-2 text-sm">${t.description}</td>
+                            </tr>
+                        `).join('') : '<tr><td colspan="4" class="px-4 py-2 text-sm text-center text-gray-500">No transactions found</td></tr>'}
+                    </tbody>
+                </table>
+            </div>
+            <div class="mt-4">
+                <a href="/admin-panel/users/view-transactions/${user.id}/" class="text-blue-600 hover:text-blue-900">View All Transactions →</a>
+            </div>
+        </div>
+        
+        <!-- Actions -->
+        <div class="flex space-x-4 pt-4 border-t">
+            <a href="/admin-panel/users/login-as/${user.id}/" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">Login as User</a>
+            <button onclick="closeUserDetails()" class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700">Close</button>
+        </div>
+    </div>
+`;
+
+// Load referral information
+loadReferralInfo(user.id);
         } else {
             content.innerHTML = `<p class="text-red-500">Error loading user details: ${data.message}</p>`;
         }
     })
     .catch(error => {
-        content.innerHTML = `<p class="text-red-500">Error loading user details: ${error.message}</p>`;
+        console.error('Error fetching user details:', error);
+        content.innerHTML = `
+            <div class="text-center py-8">
+                <i class="fas fa-exclamation-triangle text-3xl text-red-400 mb-4"></i>
+                <p class="text-red-600">Error loading user details: ${error.message}</p>
+                <button onclick="closeUserDetails()" class="mt-4 px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600">Close</button>
+            </div>
+        `;
     });
 }
 
@@ -422,7 +496,7 @@ function editUser(event, userId) {
             statusDiv.innerHTML = `<p class="text-green-600">User updated successfully!</p>`;
             setTimeout(() => {
                 statusDiv.innerHTML = '';
-                location.reload(); // Refresh to show updated data
+                location.reload();
             }, 2000);
         } else {
             statusDiv.innerHTML = `<p class="text-red-600">Error: ${data.message}</p>`;
@@ -439,6 +513,20 @@ function editBalance(event, userId) {
     const statusDiv = document.getElementById('editBalanceStatus');
     const formData = new FormData(form);
 
+    // Validate form data before sending
+    const balance = formData.get('account_balance');
+    const note = formData.get('adjustment_note');
+    
+    if (!balance || !note) {
+        statusDiv.innerHTML = `<p class="text-red-600">Please fill in all required fields.</p>`;
+        return;
+    }
+    
+    if (isNaN(parseFloat(balance)) || parseFloat(balance) < 0) {
+        statusDiv.innerHTML = `<p class="text-red-600">Please enter a valid positive number for balance.</p>`;
+        return;
+    }
+
     fetch(`/admin-panel/users/edit-balance/${userId}/`, {
         method: 'POST',
         headers: {
@@ -452,7 +540,7 @@ function editBalance(event, userId) {
             statusDiv.innerHTML = `<p class="text-green-600">Balance updated successfully!</p>`;
             setTimeout(() => {
                 statusDiv.innerHTML = '';
-                location.reload(); // Refresh to show updated balance
+                location.reload();
             }, 2000);
         } else {
             statusDiv.innerHTML = `<p class="text-red-600">Error: ${data.message}</p>`;
@@ -488,7 +576,7 @@ function sendMessage(event, userId) {
     })
     .catch(error => {
         statusDiv.innerHTML = `<p class="text-red-600">Error: ${error.message}</p>`;
-        setTimeout(() => statusDiv.innerHTML = '', 3000);
+        setTimeout(() => status = '', 3000);
     });
 }
 
@@ -512,5 +600,139 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }, 5000);
 });
+
+function loadReferralInfo(userId) {
+    fetch(`/admin-panel/users/referral-details/${userId}/`, {
+        method: 'GET',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+            'Accept': 'application/json',
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        const referralInfoDiv = document.getElementById('referralInfo');
+        if (data.status === 'success') {
+            const referralData = data.referral_data;
+            referralInfoDiv.innerHTML = `
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                    <div class="bg-white p-3 rounded border">
+                        <div class="text-sm text-gray-600">Total Bonus</div>
+                        <div class="text-lg font-semibold text-green-600">$${referralData.total_bonus.toFixed(2)}</div>
+                    </div>
+                    <div class="bg-white p-3 rounded border">
+                        <div class="text-sm text-gray-600">Referral Earnings</div>
+                        <div class="text-lg font-semibold text-blue-600">$${referralData.total_referral_earnings.toFixed(2)}</div>
+                    </div>
+                    <div class="bg-white p-3 rounded border">
+                        <div class="text-sm text-gray-600">Referrals Made</div>
+                        <div class="text-lg font-semibold text-purple-600">${referralData.referrals_count}</div>
+                    </div>
+                    <div class="bg-white p-3 rounded border">
+                        <div class="text-sm text-gray-600">Referred By</div>
+                        <div class="text-lg font-semibold text-gray-800">${referralData.referred_by || 'None'}</div>
+                    </div>
+                </div>
+                ${referralData.referrals_made.length > 0 ? `
+                    <div class="mt-4">
+                        <h5 class="font-medium text-gray-800 mb-2">Recent Referrals</h5>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">User</th>
+                                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Bonus</th>
+                                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200">
+                                    ${referralData.referrals_made.map(ref => `
+                                        <tr>
+                                            <td class="px-3 py-2 text-sm">${ref.referred_user}</td>
+                                            <td class="px-3 py-2 text-sm">$${ref.bonus_amount.toFixed(2)}</td>
+                                            <td class="px-3 py-2 text-sm">
+                                                <span class="px-2 py-1 text-xs rounded-full ${ref.is_paid ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}">
+                                                    ${ref.is_paid ? 'Paid' : 'Pending'}
+                                                </span>
+                                            </td>
+                                            <td class="px-3 py-2 text-sm">${new Date(ref.created_at).toLocaleDateString()}</td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                ` : '<p class="text-gray-500 text-center py-4">No referrals made yet</p>'}
+            `;
+        } else {
+            referralInfoDiv.innerHTML = `<p class="text-red-500">Error loading referral information</p>`;
+        }
+    })
+    .catch(error => {
+        console.error('Error loading referral info:', error);
+        document.getElementById('referralInfo').innerHTML = `<p class="text-red-500">Error loading referral information</p>`;
+    });
+}
+
+function resetUserBalance(event, userId) {
+    event.preventDefault();
+    const form = event.target;
+    const statusDiv = document.getElementById('resetBalanceStatus');
+    const formData = new FormData(form);
+
+    // Additional confirmation
+    const confirmation = formData.get('confirmation');
+    const reason = formData.get('reset_reason');
+    
+    if (confirmation !== 'RESET_ALL_DATA') {
+        statusDiv.innerHTML = `<p class="text-red-600">Please type "RESET_ALL_DATA" exactly to confirm.</p>`;
+        return;
+    }
+    
+    if (!reason.trim()) {
+        statusDiv.innerHTML = `<p class="text-red-600">Please provide a reason for the reset.</p>`;
+        return;
+    }
+    
+    // Final confirmation dialog
+    if (!confirm(`Are you absolutely sure you want to PERMANENTLY DELETE all transactions and reset all balances for this user?\n\nThis action CANNOT be undone!\n\nReason: ${reason}`)) {
+        return;
+    }
+
+    // Show loading state
+    const submitButton = form.querySelector('button[type="submit"]');
+    const originalText = submitButton.innerHTML;
+    submitButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Resetting...';
+    submitButton.disabled = true;
+
+    fetch(`/admin-panel/users/reset-balance/${userId}/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+        },
+        body: formData,
+    })
+    .then(response => response.json())
+    .then(data => {
+        submitButton.innerHTML = originalText;
+        submitButton.disabled = false;
+        
+        if (data.status === 'success') {
+            statusDiv.innerHTML = `<p class="text-green-600">User data reset successfully! Page will reload in 3 seconds.</p>`;
+            form.reset();
+            setTimeout(() => {
+                location.reload();
+            }, 3000);
+        } else {
+            statusDiv.innerHTML = `<p class="text-red-600">Error: ${data.message}</p>`;
+        }
+    })
+    .catch(error => {
+        submitButton.innerHTML = originalText;
+        submitButton.disabled = false;
+        statusDiv.innerHTML = `<p class="text-red-600">Error: ${error.message}</p>`;
+    });
+}
 </script>
 {% endblock %}

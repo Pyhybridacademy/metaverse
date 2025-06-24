@@ -5,38 +5,38 @@
 {% block page_title %}My Profile{% endblock %}
 
 {% block content %}
-<div class="pt-16 p-6">
+<div class="pt-16 p-6 animate-fade-in">
     <div class="max-w-4xl mx-auto">
         <!-- Profile Header -->
-        <div class="bg-white rounded-lg shadow mb-6">
-            <div class="p-6 border-b border-gray-200">
-                <div class="flex items-center">
-                    <div class="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center text-white text-2xl font-bold">
+        <div class="glass-effect rounded-xl border border-purple-primary border-opacity-30 mb-8">
+            <div class="p-6 border-b border-gray-600 border-opacity-30">
+                <div class="flex flex-col md:flex-row items-center space-y-4 md:space-y-0 md:space-x-6">
+                    <div class="w-24 h-24 bg-gradient-to-r from-purple-primary to-purple-secondary rounded-full flex items-center justify-center text-white text-3xl font-bold">
                         {{ user.username|first|upper }}
                     </div>
-                    <div class="ml-4">
-                        <h1 class="text-2xl font-bold text-gray-900">{{ user.full_name|default:user.username }}</h1>
-                        <p class="text-gray-600">{{ user.email }}</p>
-                        <div class="flex items-center mt-2">
+                    <div class="flex-1 text-center md:text-left">
+                        <h2 class="text-3xl font-bold text-white mb-2">{{ user.full_name|default:user.username }}</h2>
+                        <p class="text-gray-300 mb-3">{{ user.email }}</p>
+                        <div class="flex flex-wrap justify-center md:justify-start gap-2">
                             {% if user.is_verified %}
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                <span class="inline-flex items-center px-3 py-1 bg-green-400 bg-opacity-20 text-green-400 text-sm rounded-full border border-green-400 border-opacity-30">
                                     <i class="fas fa-check-circle mr-1"></i>
                                     Verified
                                 </span>
                             {% else %}
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                <span class="inline-flex items-center px-3 py-1 bg-yellow-400 bg-opacity-20 text-yellow-400 text-sm rounded-full border border-yellow-400 border-opacity-30">
                                     <i class="fas fa-clock mr-1"></i>
                                     Pending Verification
                                 </span>
                             {% endif %}
-                            
+
                             {% if user.is_approved %}
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 ml-2">
+                                <span class="inline-flex items-center px-3 py-1 bg-green-400 bg-opacity-20 text-green-400 text-sm rounded-full border border-green-400 border-opacity-30">
                                     <i class="fas fa-user-check mr-1"></i>
                                     Approved
                                 </span>
                             {% else %}
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 ml-2">
+                                <span class="inline-flex items-center px-3 py-1 bg-red-400 bg-opacity-20 text-red-400 text-sm rounded-full border border-red-400 border-opacity-30">
                                     <i class="fas fa-user-times mr-1"></i>
                                     Pending Approval
                                 </span>
@@ -48,45 +48,58 @@
             
             <!-- Account Stats -->
             <div class="p-6">
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
                     <div class="text-center">
-                        <p class="text-2xl font-bold text-green-600">${{ user.profile.account_balance|floatformat:2 }}</p>
-                        <p class="text-sm text-gray-600">Account Balance</p>
+                        <div class="p-4 bg-green-400 bg-opacity-20 rounded-xl mb-2">
+                            <i class="fas fa-wallet text-green-400 text-2xl"></i>
+                        </div>
+                        <p class="text-2xl font-bold text-green-400">${{ user.profile.account_balance|floatformat:2 }}</p>
+                        <p class="text-sm text-gray-400">Account Balance</p>
                     </div>
                     <div class="text-center">
-                        <p class="text-2xl font-bold text-blue-600">${{ user.profile.total_deposit|floatformat:2 }}</p>
-                        <p class="text-sm text-gray-600">Total Deposits</p>
+                        <div class="p-4 bg-blue-400 bg-opacity-20 rounded-xl mb-2">
+                            <i class="fas fa-arrow-down text-blue-400 text-2xl"></i>
+                        </div>
+                        <p class="text-2xl font-bold text-blue-400">${{ user.profile.total_deposit|floatformat:2 }}</p>
+                        <p class="text-sm text-gray-400">Total Deposits</p>
                     </div>
                     <div class="text-center">
-                        <p class="text-2xl font-bold text-purple-600">${{ user.profile.current_investment|floatformat:2 }}</p>
-                        <p class="text-sm text-gray-600">Active Investments</p>
+                        <div class="p-4 bg-purple-400 bg-opacity-20 rounded-xl mb-2">
+                            <i class="fas fa-chart-pie text-purple-400 text-2xl"></i>
+                        </div>
+                        <p class="text-2xl font-bold text-purple-400">${{ user.profile.current_investment|floatformat:2 }}</p>
+                        <p class="text-sm text-gray-400">Active Investments</p>
                     </div>
                     <div class="text-center">
-                        <p class="text-2xl font-bold text-yellow-600">${{ user.profile.total_bonus|floatformat:2 }}</p>
-                        <p class="text-sm text-gray-600">Total Bonuses</p>
+                        <div class="p-4 bg-yellow-400 bg-opacity-20 rounded-xl mb-2">
+                            <i class="fas fa-gift text-yellow-400 text-2xl"></i>
+                        </div>
+                        <p class="text-2xl font-bold text-yellow-400">${{ user.profile.total_bonus|floatformat:2 }}</p>
+                        <p class="text-sm text-gray-400">Total Bonuses</p>
                     </div>
                 </div>
             </div>
         </div>
 
         <!-- Tab Navigation -->
-        <div class="bg-white rounded-lg shadow mb-6">
-            <div class="border-b border-gray-200">
+        <div class="glass-effect rounded-xl border border-purple-primary border-opacity-30 mb-6">
+            <div class="border-b border-gray-600 border-opacity-30">
                 <nav class="-mb-px flex space-x-8 px-6">
-                    <button onclick="showTab('profile')" id="profile-tab" class="tab-button active py-4 px-1 border-b-2 border-blue-500 font-medium text-sm text-blue-600">
-                        Profile Information
+                    <button onclick="showTab('profile')" id="profile-tab" class="tab-button active py-4 px-1 border-b-2 border-purple-primary font-medium text-sm text-purple-primary">
+                        <i class="fas fa-user mr-2"></i>Profile Information
                     </button>
-                    <button onclick="showTab('security')" id="security-tab" class="tab-button py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300">
-                        Security Settings
+                    <button onclick="showTab('security')" id="security-tab" class="tab-button py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-400 hover:text-white hover:border-gray-300 transition-all">
+                        <i class="fas fa-shield-alt mr-2"></i>Security Settings
                     </button>
                 </nav>
             </div>
         </div>
         
         <!-- Profile Information Tab -->
-        <div id="profile-content" class="tab-content bg-white rounded-lg shadow">
-            <div class="p-6 border-b border-gray-200">
-                <h2 class="text-lg font-semibold text-gray-900">Update Profile Information</h2>
+        <div id="profile-content" class="tab-content glass-effect rounded-xl border border-purple-primary border-opacity-30">
+            <div class="p-6 border-b border-gray-600 border-opacity-30">
+                <h2 class="text-xl font-semibold text-white">Update Profile Information</h2>
+                <p class="text-gray-400 mt-1">Keep your profile information up to date</p>
             </div>
             
             <form method="post" action="{% url 'accounts:profile' %}" class="p-6">
@@ -94,112 +107,117 @@
                 <input type="hidden" name="form_type" value="profile">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                        <label for="{{ form.state.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">State/Province</label>
-                        {{ form.state }}
+                        <label for="{{ form.state.id_for_label }}" class="block text-sm font-medium text-gray-300 mb-2">State/Province</label>
+                        <input type="text" name="state" id="{{ form.state.id_for_label }}" value="{{ form.state.value|default:'' }}" class="w-full px-4 py-3 bg-gray-700 bg-opacity-50 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-primary focus:border-transparent transition-all">
                         {% if form.state.errors %}
-                            <p class="mt-1 text-sm text-red-600">{{ form.state.errors.0 }}</p>
+                            <p class="mt-1 text-sm text-red-400">{{ form.state.errors.0 }}</p>
                         {% endif %}
                     </div>
                     
                     <div>
-                        <label for="{{ form.country.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">Country</label>
-                        {{ form.country }}
+                        <label for="{{ form.country.id_for_label }}" class="block text-sm font-medium text-gray-300 mb-2">Country</label>
+                        <input type="text" name="country" id="{{ form.country.id_for_label }}" value="{{ form.country.value|default:'' }}" class="w-full px-4 py-3 bg-gray-700 bg-opacity-50 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-primary focus:border-transparent transition-all">
                         {% if form.country.errors %}
-                            <p class="mt-1 text-sm text-red-600">{{ form.country.errors.0 }}</p>
+                            <p class="mt-1 text-sm text-red-400">{{ form.country.errors.0 }}</p>
                         {% endif %}
                     </div>
                     
                     <div>
-                        <label for="{{ form.currency.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">Preferred Currency</label>
-                        {{ form.currency }}
+                        <label for="{{ form.currency.id_for_label }}" class="block text-sm font-medium text-gray-300 mb-2">Preferred Currency</label>
+                        <select name="currency" id="{{ form.currency.id_for_label }}" class="w-full px-4 py-3 bg-gray-700 bg-opacity-50 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-primary focus:border-transparent transition-all">
+                            <option value="USD">USD - US Dollar</option>
+                            <option value="EUR">EUR - Euro</option>
+                            <option value="GBP">GBP - British Pound</option>
+                        </select>
                         {% if form.currency.errors %}
-                            <p class="mt-1 text-sm text-red-600">{{ form.currency.errors.0 }}</p>
+                            <p class="mt-1 text-sm text-red-400">{{ form.currency.errors.0 }}</p>
                         {% endif %}
                     </div>
                     
                     <div>
-                        <label for="{{ form.phone_number.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
-                        {{ form.phone_number }}
+                        <label for="{{ form.phone_number.id_for_label }}" class="block text-sm font-medium text-gray-300 mb-2">Phone Number</label>
+                        <input type="tel" name="phone_number" id="{{ form.phone_number.id_for_label }}" value="{{ form.phone_number.value|default:'' }}" class="w-full px-4 py-3 bg-gray-700 bg-opacity-50 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-primary focus:border-transparent transition-all">
                         {% if form.phone_number.errors %}
-                            <p class="mt-1 text-sm text-red-600">{{ form.phone_number.errors.0 }}</p>
+                            <p class="mt-1 text-sm text-red-400">{{ form.phone_number.errors.0 }}</p>
                         {% endif %}
                     </div>
                 </div>
                 
                 <div class="mt-6">
-                    <label for="{{ form.address.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">Address</label>
-                    {{ form.address }}
+                    <label for="{{ form.address.id_for_label }}" class="block text-sm font-medium text-gray-300 mb-2">Address</label>
+                    <textarea name="address" id="{{ form.address.id_for_label }}" rows="3" class="w-full px-4 py-3 bg-gray-700 bg-opacity-50 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-primary focus:border-transparent transition-all">{{ form.address.value|default:'' }}</textarea>
                     {% if form.address.errors %}
-                        <p class="mt-1 text-sm text-red-600">{{ form.address.errors.0 }}</p>
+                        <p class="mt-1 text-sm text-red-400">{{ form.address.errors.0 }}</p>
                     {% endif %}
                 </div>
                 
-                <div class="mt-6 flex justify-end">
-                    <button type="submit" class="px-6 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        Update Profile
+                <div class="mt-8 flex justify-end">
+                    <button type="submit" class="px-8 py-3 bg-gradient-to-r from-purple-primary to-purple-secondary text-white font-medium rounded-lg hover:from-purple-secondary hover:to-purple-accent transition-all duration-200">
+                        <i class="fas fa-save mr-2"></i>Update Profile
                     </button>
                 </div>
             </form>
         </div>
 
         <!-- Security Settings Tab -->
-        <div id="security-content" class="tab-content bg-white rounded-lg shadow hidden">
-            <div class="p-6 border-b border-gray-200">
-                <h2 class="text-lg font-semibold text-gray-900">Change Password</h2>
-                <p class="text-sm text-gray-600 mt-1">Update your password to keep your account secure</p>
+        <div id="security-content" class="tab-content glass-effect rounded-xl border border-purple-primary border-opacity-30 hidden">
+            <div class="p-6 border-b border-gray-600 border-opacity-30">
+                <h2 class="text-xl font-semibold text-white">Change Password</h2>
+                <p class="text-gray-400 mt-1">Update your password to keep your account secure</p>
             </div>
             
             <form method="post" action="{% url 'accounts:change_password' %}" class="p-6">
                 {% csrf_token %}
                 <div class="space-y-6">
                     <div>
-                        <label for="old_password" class="block text-sm font-medium text-gray-700 mb-2">Current Password</label>
-                        <input type="password" name="old_password" id="old_password" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <label for="old_password" class="block text-sm font-medium text-gray-300 mb-2">Current Password</label>
+                        <input type="password" name="old_password" id="old_password" required class="w-full px-4 py-3 bg-gray-700 bg-opacity-50 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-primary focus:border-transparent transition-all">
                     </div>
                     
                     <div>
-                        <label for="new_password1" class="block text-sm font-medium text-gray-700 mb-2">New Password</label>
-                        <input type="password" name="new_password1" id="new_password1" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <label for="new_password1" class="block text-sm font-medium text-gray-300 mb-2">New Password</label>
+                        <input type="password" name="new_password1" id="new_password1" required class="w-full px-4 py-3 bg-gray-700 bg-opacity-50 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-primary focus:border-transparent transition-all">
                         <p class="mt-1 text-xs text-gray-500">Password must be at least 8 characters long</p>
                     </div>
                     
                     <div>
-                        <label for="new_password2" class="block text-sm font-medium text-gray-700 mb-2">Confirm New Password</label>
-                        <input type="password" name="new_password2" id="new_password2" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <label for="new_password2" class="block text-sm font-medium text-gray-300 mb-2">Confirm New Password</label>
+                        <input type="password" name="new_password2" id="new_password2" required class="w-full px-4 py-3 bg-gray-700 bg-opacity-50 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-primary focus:border-transparent transition-all">
                     </div>
                 </div>
                 
-                <div class="mt-6 flex justify-end">
-                    <button type="submit" class="px-6 py-2 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500">
-                        Change Password
+                <div class="mt-8 flex justify-end">
+                    <button type="submit" class="px-8 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white font-medium rounded-lg hover:from-red-600 hover:to-red-700 transition-all duration-200">
+                        <i class="fas fa-key mr-2"></i>Change Password
                     </button>
                 </div>
             </form>
         </div>
         
         <!-- Referral Information -->
-        <div class="bg-white rounded-lg shadow mt-6">
-            <div class="p-6 border-b border-gray-200">
-                <h2 class="text-lg font-semibold text-gray-900">Referral Information</h2>
+        <div class="glass-effect rounded-xl border border-purple-primary border-opacity-30 mt-8">
+            <div class="p-6 border-b border-gray-600 border-opacity-30">
+                <h2 class="text-xl font-semibold text-white">Referral Information</h2>
+                <p class="text-gray-400 mt-1">Share your referral code and earn commissions</p>
             </div>
             
             <div class="p-6">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Your Referral Code</label>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">Your Referral Code</label>
                         <div class="flex">
-                            <input type="text" value="{{ user.profile.referral_code }}" id="referral-code" class="flex-1 px-3 py-2 border border-gray-300 rounded-l-lg bg-gray-50" readonly>
-                            <button onclick="copyToClipboard('{{ user.profile.referral_code }}')" class="px-4 py-2 bg-blue-600 text-white rounded-r-lg hover:bg-blue-700">
+                            <input type="text" value="{{ user.profile.referral_code }}" id="referral-code" class="flex-1 px-4 py-3 bg-gray-700 bg-opacity-50 border border-gray-600 rounded-l-lg text-white" readonly>
+                            <button onclick="copyToClipboard('{{ user.profile.referral_code }}')" class="px-6 py-3 bg-purple-primary hover:bg-purple-secondary border border-purple-primary rounded-r-lg text-white transition-all">
                                 <i class="fas fa-copy"></i>
                             </button>
                         </div>
                     </div>
                     
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Referral Link</label>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">Referral Link</label>
                         <div class="flex">
-                            <input type="text" value="{{ request.build_absolute_uri }}{% url 'accounts:register_step1' %}?ref={{ user.profile.referral_code }}" id="referral-link" class="flex-1 px-3 py-2 border border-gray-300 rounded-l-lg bg-gray-50 text-xs" readonly>
-                            <button onclick="copyToClipboard('{{ request.build_absolute_uri }}{% url 'accounts:register_step1' %}?ref={{ user.profile.referral_code }}')" class="px-4 py-2 bg-blue-600 text-white rounded-r-lg hover:bg-blue-700">
+                            <input type="text" value="{{ request.build_absolute_uri }}{% url 'accounts:register_step1' %}?ref={{ user.profile.referral_code }}" id="referral-link" class="flex-1 px-4 py-3 bg-gray-700 bg-opacity-50 border border-gray-600 rounded-l-lg text-white text-xs" readonly>
+                            <button onclick="copyToClipboard('{{ request.build_absolute_uri }}{% url 'accounts:register_step1' %}?ref={{ user.profile.referral_code }}')" class="px-6 py-3 bg-purple-primary hover:bg-purple-secondary border border-purple-primary rounded-r-lg text-white transition-all">
                                 <i class="fas fa-copy"></i>
                             </button>
                         </div>
@@ -219,8 +237,8 @@ function showTab(tabName) {
     
     // Remove active class from all tabs
     document.querySelectorAll('.tab-button').forEach(button => {
-        button.classList.remove('active', 'border-blue-500', 'text-blue-600');
-        button.classList.add('border-transparent', 'text-gray-500');
+        button.classList.remove('active', 'border-purple-primary', 'text-purple-primary');
+        button.classList.add('border-transparent', 'text-gray-400');
     });
     
     // Show selected tab content
@@ -228,20 +246,22 @@ function showTab(tabName) {
     
     // Add active class to selected tab
     const activeTab = document.getElementById(tabName + '-tab');
-    activeTab.classList.add('active', 'border-blue-500', 'text-blue-600');
-    activeTab.classList.remove('border-transparent', 'text-gray-500');
+    activeTab.classList.add('active', 'border-purple-primary', 'text-purple-primary');
+    activeTab.classList.remove('border-transparent', 'text-gray-400');
 }
 
 function copyToClipboard(text) {
     navigator.clipboard.writeText(text).then(function() {
         // Show success message
         const toast = document.createElement('div');
-        toast.className = 'fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg z-50';
-        toast.textContent = 'Copied to clipboard!';
+        toast.className = 'fixed top-4 right-4 glass-effect border border-green-400 border-opacity-30 text-white px-6 py-3 rounded-lg shadow-lg z-50 animate-slide-up';
+        toast.innerHTML = '<i class="fas fa-check mr-2 text-green-400"></i>Copied to clipboard!';
         document.body.appendChild(toast);
         
         setTimeout(() => {
-            document.body.removeChild(toast);
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateX(100%)';
+            setTimeout(() => document.body.removeChild(toast), 300);
         }, 3000);
     });
 }

@@ -3,86 +3,92 @@
 {% block title %}Register - Step 2 - {{ site_settings.site_name|default:"Investment Platform" }}{% endblock %}
 
 {% block content %}
-<div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+<div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 py-12 px-4 sm:px-6 lg:px-8">
     <div class="max-w-md w-full space-y-8">
-        <div>
-            <div class="mx-auto h-12 w-12 flex items-center justify-center bg-blue-500 rounded-full">
-                <i class="fas fa-user-check text-white text-xl"></i>
+        <div class="text-center">
+            <div class="mx-auto h-16 w-16 bg-gradient-to-r from-purple-primary to-purple-secondary rounded-full flex items-center justify-center mb-6">
+                <i class="fas fa-user-check text-white text-2xl"></i>
             </div>
-            <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
-                Complete your profile
+            <h2 class="text-4xl font-bold text-white mb-2">
+                Complete Profile
             </h2>
-            <p class="mt-2 text-center text-sm text-gray-600">
-                Step 2 of 2 - Additional Information
-            </p>
+            <p class="text-gray-300 mb-2">Step 2 of 2 - Additional Information</p>
+            <div class="flex justify-center space-x-2 mb-6">
+                <div class="w-8 h-2 bg-gray-600 rounded-full"></div>
+                <div class="w-8 h-2 bg-purple-primary rounded-full"></div>
+            </div>
         </div>
         
-        <form class="mt-8 space-y-6" method="post" enctype="multipart/form-data">
-            {% csrf_token %}
-            <div class="space-y-4">
+        <div class="glass-effect rounded-xl border border-purple-primary border-opacity-30 p-8">
+            <form class="space-y-6" method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                
                 <div>
-                    <label for="{{ form.state.id_for_label }}" class="block text-sm font-medium text-gray-700">State/Province</label>
-                    {{ form.state }}
+                    <label for="{{ form.state.id_for_label }}" class="block text-sm font-medium text-gray-300 mb-2">State/Province</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-map-marker-alt text-gray-400"></i>
+                        </div>
+                        <input type="text" name="state" id="{{ form.state.id_for_label }}"
+                               class="w-full pl-10 pr-4 py-3 bg-gray-700 bg-opacity-50 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-primary focus:border-transparent transition-all" 
+                               placeholder="Enter your state or province">
+                    </div>
                     {% if form.state.errors %}
-                        <p class="mt-1 text-sm text-red-600">{{ form.state.errors.0 }}</p>
+                        <p class="mt-1 text-sm text-red-400">{{ form.state.errors.0 }}</p>
                     {% endif %}
                 </div>
                 
                 <div>
-                    <label for="{{ form.country.id_for_label }}" class="block text-sm font-medium text-gray-700">Country</label>
-                    {{ form.country }}
+                    <label for="{{ form.country.id_for_label }}" class="block text-sm font-medium text-gray-300 mb-2">Country</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-globe text-gray-400"></i>
+                        </div>
+                        <input type="text" name="country" id="{{ form.country.id_for_label }}"
+                               class="w-full pl-10 pr-4 py-3 bg-gray-700 bg-opacity-50 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-primary focus:border-transparent transition-all" 
+                               placeholder="Enter your country">
+                    </div>
                     {% if form.country.errors %}
-                        <p class="mt-1 text-sm text-red-600">{{ form.country.errors.0 }}</p>
+                        <p class="mt-1 text-sm text-red-400">{{ form.country.errors.0 }}</p>
                     {% endif %}
                 </div>
                 
                 <div>
-                    <label for="{{ form.currency.id_for_label }}" class="block text-sm font-medium text-gray-700">Preferred Currency</label>
-                    {{ form.currency }}
+                    <label for="{{ form.currency.id_for_label }}" class="block text-sm font-medium text-gray-300 mb-2">Preferred Currency</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-dollar-sign text-gray-400"></i>
+                        </div>
+                        <select name="currency" id="{{ form.currency.id_for_label }}"
+                                class="w-full pl-10 pr-4 py-3 bg-gray-700 bg-opacity-50 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-primary focus:border-transparent transition-all">
+                            <option value="">Select currency</option>
+                            <option value="USD">USD - US Dollar</option>
+                            <option value="EUR">EUR - Euro</option>
+                            <option value="GBP">GBP - British Pound</option>
+                            <option value="CAD">CAD - Canadian Dollar</option>
+                            <option value="AUD">AUD - Australian Dollar</option>
+                        </select>
+                    </div>
                     {% if form.currency.errors %}
-                        <p class="mt-1 text-sm text-red-600">{{ form.currency.errors.0 }}</p>
+                        <p class="mt-1 text-sm text-red-400">{{ form.currency.errors.0 }}</p>
                     {% endif %}
                 </div>
                 
                 <div>
-                    <label for="{{ form.referral_code.id_for_label }}" class="block text-sm font-medium text-gray-700">Referral Code (Optional)</label>
-                    {{ form.referral_code }}
+                    <label for="{{ form.referral_code.id_for_label }}" class="block text-sm font-medium text-gray-300 mb-2">Referral Code (Optional)</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-users text-gray-400"></i>
+                        </div>
+                        <input type="text" name="referral_code" id="{{ form.referral_code.id_for_label }}"
+                               class="w-full pl-10 pr-4 py-3 bg-gray-700 bg-opacity-50 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-primary focus:border-transparent transition-all" 
+                               placeholder="Enter referral code if you have one">
+                    </div>
                     {% if form.referral_code.errors %}
-                        <p class="mt-1 text-sm text-red-600">{{ form.referral_code.errors.0 }}</p>
+                        <p class="mt-1 text-sm text-red-400">{{ form.referral_code.errors.0 }}</p>
                     {% endif %}
                     <p class="mt-1 text-xs text-gray-500">Enter a referral code if you were referred by someone</p>
                 </div>
                 
                 <!-- KYC Document Upload -->
-                <div class="border-t border-gray-200 pt-4">
-                    <h3 class="text-lg font-medium text-gray-900 mb-4">Identity Verification (Optional)</h3>
-                    <div>
-                        <label for="{{ kyc_form.document_type.id_for_label }}" class="block text-sm font-medium text-gray-700">Document Type</label>
-                        {{ kyc_form.document_type }}
-                        {% if kyc_form.document_type.errors %}
-                            <p class="mt-1 text-sm text-red-600">{{ kyc_form.document_type.errors.0 }}</p>
-                        {% endif %}
-                    </div>
-                    
-                    <div class="mt-4">
-                        <label for="{{ kyc_form.document_file.id_for_label }}" class="block text-sm font-medium text-gray-700">Upload Document</label>
-                        {{ kyc_form.document_file }}
-                        {% if kyc_form.document_file.errors %}
-                            <p class="mt-1 text-sm text-red-600">{{ kyc_form.document_file.errors.0 }}</p>
-                        {% endif %}
-                        <p class="mt-1 text-xs text-gray-500">Upload a clear photo of your ID document (optional but recommended)</p>
-                    </div>
-                </div>
-            </div>
-
-            <div>
-                <button type="submit" 
-                        class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                    Complete Registration
-                    <i class="fas fa-check ml-2"></i>
-                </button>
-            </div>
-        </form>
-    </div>
-</div>
-{% endblock %}
+                <div class="border-t border-gray-600 border-opacity-30 pt-6">

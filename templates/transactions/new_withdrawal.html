@@ -5,47 +5,57 @@
 {% block page_title %}New Withdrawal{% endblock %}
 
 {% block content %}
-<div class="pt-16 p-6">
+<div class="pt-16 p-6 animate-fade-in">
     <div class="max-w-2xl mx-auto">
         <!-- Page Header -->
-        <div class="mb-8">
-            <h1 class="text-2xl font-bold text-gray-900">Request Withdrawal</h1>
-            <p class="text-gray-600">Transfer funds from your account to your wallet</p>
+        <div class="mb-8 text-center">
+            <h1 class="text-3xl font-bold text-white mb-2">Request Withdrawal 💸</h1>
+            <p class="text-gray-300">Transfer funds from your account to your registered wallet</p>
         </div>
         
         <!-- Account Balance -->
-        <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-8">
+        <div class="glass-effect rounded-xl border border-green-400 border-opacity-30 p-6 mb-8">
             <div class="flex items-center justify-between">
                 <div class="flex items-center">
-                    <i class="fas fa-wallet text-green-600 mr-3"></i>
+                    <i class="fas fa-wallet text-green-400 text-2xl mr-4"></i>
                     <div>
-                        <p class="text-sm text-green-800">Available Balance</p>
-                        <p class="text-xl font-bold text-green-900">${{ user.profile.account_balance|floatformat:2 }}</p>
+                        <p class="text-sm text-green-300">Available Balance</p>
+                        <p class="text-3xl font-bold text-white">${{ user.profile.account_balance|floatformat:2 }}</p>
                     </div>
                 </div>
                 <div class="text-right">
-                    <p class="text-sm text-green-800">Pending Withdrawals</p>
-                    <p class="text-lg font-semibold text-green-900">${{ user.profile.pending_withdrawal|floatformat:2 }}</p>
+                    <p class="text-sm text-yellow-300">Pending Withdrawals</p>
+                    <p class="text-xl font-semibold text-yellow-400">${{ user.profile.pending_withdrawal|default:"0.00"|floatformat:2 }}</p>
                 </div>
             </div>
         </div>
         
         <!-- Withdrawal Form -->
-        <div class="bg-white rounded-lg shadow">
-            <div class="p-6 border-b border-gray-200">
-                <h2 class="text-lg font-semibold text-gray-900">Withdrawal Details</h2>
+        <div class="glass-effect rounded-xl border border-purple-primary border-opacity-30 overflow-hidden">
+            <div class="p-6 border-b border-gray-600 border-opacity-30">
+                <h2 class="text-xl font-semibold text-white flex items-center">
+                    <i class="fas fa-arrow-up mr-2 text-purple-primary"></i>
+                    Withdrawal Details
+                </h2>
             </div>
             
             <form method="post" class="p-6">
                 {% csrf_token %}
                 <div class="space-y-6">
                     <div>
-                        <label for="{{ form.amount.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        <label for="{{ form.amount.id_for_label }}" class="block text-sm font-medium text-gray-300 mb-2">
                             Withdrawal Amount (USD)
                         </label>
-                        {{ form.amount }}
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <span class="text-gray-400 text-lg">$</span>
+                            </div>
+                            <input type="number" name="amount" id="{{ form.amount.id_for_label }}" step="0.01" 
+                                   class="w-full pl-8 pr-4 py-3 bg-gray-700 bg-opacity-50 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-primary focus:border-transparent transition-all" 
+                                   placeholder="Enter withdrawal amount">
+                        </div>
                         {% if form.amount.errors %}
-                            <p class="mt-1 text-sm text-red-600">{{ form.amount.errors.0 }}</p>
+                            <p class="mt-1 text-sm text-red-400">{{ form.amount.errors.0 }}</p>
                         {% endif %}
                         <p class="mt-1 text-xs text-gray-500">
                             Minimum withdrawal: ${{ site_settings.minimum_withdrawal|default:"10.00" }}
@@ -53,43 +63,52 @@
                     </div>
                     
                     <div>
-                        <label for="{{ form.wallet_address.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        <label for="{{ form.wallet_address.id_for_label }}" class="block text-sm font-medium text-gray-300 mb-2">
                             Withdrawal Wallet
                         </label>
-                        {{ form.wallet_address }}
+                        <select name="wallet_address" id="{{ form.wallet_address.id_for_label }}" 
+                                class="w-full px-4 py-3 bg-gray-700 bg-opacity-50 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-primary focus:border-transparent transition-all">
+                            <option value="">Select withdrawal wallet</option>
+                            {% for wallet in user.wallets.all %}
+                                <option value="{{ wallet.id }}">{{ wallet.get_wallet_type_display }} - {{ wallet.address|truncatechars:20 }}</option>
+                            {% endfor %}
+                        </select>
                         {% if form.wallet_address.errors %}
-                            <p class="mt-1 text-sm text-red-600">{{ form.wallet_address.errors.0 }}</p>
+                            <p class="mt-1 text-sm text-red-400">{{ form.wallet_address.errors.0 }}</p>
                         {% endif %}
                         <p class="mt-1 text-xs text-gray-500">
-                            Select one of your registered wallet addresses
+                            Select one of your registered wallet addresses for withdrawal
                         </p>
                     </div>
                 </div>
                 
                 <!-- Withdrawal Summary -->
-                <div class="mt-8 bg-gray-50 rounded-lg p-4">
-                    <h3 class="text-sm font-medium text-gray-900 mb-3">Withdrawal Summary</h3>
-                    <div class="space-y-2 text-sm">
-                        <div class="flex justify-between">
-                            <span class="text-gray-600">Withdrawal Amount:</span>
-                            <span id="withdrawal-amount" class="font-medium">$0.00</span>
+                <div class="mt-8 glass-effect border border-gray-600 border-opacity-30 rounded-lg p-6">
+                    <h3 class="text-lg font-medium text-white mb-4 flex items-center">
+                        <i class="fas fa-receipt mr-2 text-blue-400"></i>
+                        Withdrawal Summary
+                    </h3>
+                    <div class="space-y-3 text-sm">
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-400">Withdrawal Amount:</span>
+                            <span id="withdrawal-amount" class="font-medium text-white">$0.00</span>
                         </div>
-                        <div class="flex justify-between">
-                            <span class="text-gray-600">Processing Fee:</span>
-                            <span class="font-medium">$0.00</span>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-400">Processing Fee:</span>
+                            <span class="font-medium text-white">$0.00</span>
                         </div>
-                        <div class="border-t border-gray-200 pt-2 flex justify-between">
-                            <span class="font-medium text-gray-900">You will receive:</span>
-                            <span id="net-amount" class="font-bold text-green-600">$0.00</span>
+                        <div class="border-t border-gray-600 border-opacity-30 pt-3 flex justify-between items-center">
+                            <span class="font-medium text-white">You will receive:</span>
+                            <span id="net-amount" class="font-bold text-green-400 text-lg">$0.00</span>
                         </div>
                     </div>
                 </div>
                 
-                <div class="mt-8 flex justify-between">
-                    <a href="{% url 'transactions:withdrawals' %}" class="px-4 py-2 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50">
+                <div class="mt-8 flex flex-col sm:flex-row gap-4">
+                    <a href="{% url 'transactions:withdrawals' %}" class="flex-1 px-6 py-3 glass-effect border border-gray-600 text-gray-300 font-medium rounded-lg hover:border-purple-primary hover:text-white transition-all text-center">
                         Cancel
                     </a>
-                    <button type="submit" class="px-6 py-2 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700">
+                    <button type="submit" class="flex-1 px-6 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white font-medium rounded-lg hover:from-red-600 hover:to-red-700 transition-all duration-200">
                         Request Withdrawal
                     </button>
                 </div>
@@ -97,41 +116,55 @@
         </div>
         
         <!-- Your Wallets -->
-        <div class="mt-8 bg-white rounded-lg shadow">
-            <div class="p-6 border-b border-gray-200">
-                <h2 class="text-lg font-semibold text-gray-900">Your Registered Wallets</h2>
+        <div class="mt-8 glass-effect rounded-xl border border-purple-primary border-opacity-30 overflow-hidden">
+            <div class="p-6 border-b border-gray-600 border-opacity-30">
+                <h2 class="text-xl font-semibold text-white flex items-center">
+                    <i class="fas fa-wallet mr-2 text-purple-primary"></i>
+                    Your Registered Wallets
+                </h2>
             </div>
             
             <div class="p-6">
                 {% if user.wallets.all %}
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {% for wallet in user.wallets.all %}
-                            <div class="border border-gray-200 rounded-lg p-4">
-                                <div class="flex items-center mb-2">
-                                    {% if wallet.wallet_type == 'BTC' %}
-                                        <i class="fab fa-bitcoin text-orange-500 mr-2"></i>
-                                    {% elif wallet.wallet_type == 'USDT' %}
-                                        <i class="fas fa-dollar-sign text-green-500 mr-2"></i>
-                                    {% elif wallet.wallet_type == 'ETH' %}
-                                        <i class="fab fa-ethereum text-blue-500 mr-2"></i>
-                                    {% else %}
-                                        <i class="fas fa-wallet text-gray-500 mr-2"></i>
-                                    {% endif %}
-                                    <span class="font-medium">{{ wallet.get_wallet_type_display }}</span>
-                                    {% if wallet.is_primary %}
-                                        <span class="ml-2 px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">Primary</span>
-                                    {% endif %}
+                            <div class="glass-effect border border-gray-600 border-opacity-30 rounded-lg p-4 hover:border-purple-primary hover:border-opacity-50 transition-all">
+                                <div class="flex items-center mb-3">
+                                    <div class="p-2 rounded-lg mr-3
+                                        {% if wallet.wallet_type == 'BTC' %}bg-orange-400 bg-opacity-20{% endif %}
+                                        {% if wallet.wallet_type == 'USDT' %}bg-green-400 bg-opacity-20{% endif %}
+                                        {% if wallet.wallet_type == 'ETH' %}bg-blue-400 bg-opacity-20{% endif %}
+                                        {% if wallet.wallet_type == 'LTC' %}bg-gray-400 bg-opacity-20{% endif %}">
+                                        {% if wallet.wallet_type == 'BTC' %}
+                                            <i class="fab fa-bitcoin text-orange-400"></i>
+                                        {% elif wallet.wallet_type == 'USDT' %}
+                                            <i class="fas fa-dollar-sign text-green-400"></i>
+                                        {% elif wallet.wallet_type == 'ETH' %}
+                                            <i class="fab fa-ethereum text-blue-400"></i>
+                                        {% elif wallet.wallet_type == 'LTC' %}
+                                            <i class="fas fa-coins text-gray-400"></i>
+                                        {% endif %}
+                                    </div>
+                                    <div class="flex-1">
+                                        <div class="flex items-center">
+                                            <span class="font-medium text-white">{{ wallet.get_wallet_type_display }}</span>
+                                            {% if wallet.is_primary %}
+                                                <span class="ml-2 px-2 py-1 bg-purple-400 bg-opacity-20 text-purple-400 text-xs rounded-full border border-purple-400 border-opacity-30">Primary</span>
+                                            {% endif %}
+                                        </div>
+                                        <p class="text-sm text-gray-400 font-mono break-all">{{ wallet.address }}</p>
+                                    </div>
                                 </div>
-                                <p class="text-sm text-gray-600 font-mono break-all">{{ wallet.address }}</p>
                             </div>
                         {% endfor %}
                     </div>
                 {% else %}
-                    <div class="text-center py-8">
-                        <i class="fas fa-wallet text-gray-400 text-3xl mb-4"></i>
-                        <p class="text-gray-500 mb-4">No wallet addresses found</p>
-                        <a href="{% url 'accounts:wallets' %}" class="text-blue-600 hover:text-blue-500 font-medium">
-                            Manage your wallets →
+                    <div class="text-center py-12">
+                        <i class="fas fa-wallet text-gray-400 text-5xl mb-6"></i>
+                        <h3 class="text-xl font-medium text-white mb-4">No wallet addresses found</h3>
+                        <p class="text-gray-400 mb-6">You need to add wallet addresses before making withdrawals</p>
+                        <a href="{% url 'accounts:wallets' %}" class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-purple-primary to-purple-secondary text-white font-medium rounded-lg hover:from-purple-secondary hover:to-purple-accent transition-all duration-200">
+                            <i class="fas fa-plus mr-2"></i>Manage Wallets
                         </a>
                     </div>
                 {% endif %}
@@ -139,21 +172,34 @@
         </div>
         
         <!-- Important Notice -->
-        <div class="mt-6 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-            <div class="flex">
+        <div class="mt-8 glass-effect rounded-xl border border-yellow-400 border-opacity-30 p-6">
+            <div class="flex items-start">
                 <div class="flex-shrink-0">
-                    <i class="fas fa-exclamation-triangle text-yellow-600"></i>
+                    <i class="fas fa-exclamation-triangle text-yellow-400 text-2xl"></i>
                 </div>
-                <div class="ml-3">
-                    <h3 class="text-sm font-medium text-yellow-800">Important Notice</h3>
-                    <div class="mt-2 text-sm text-yellow-700">
-                        <ul class="list-disc list-inside space-y-1">
-                            <li>Withdrawals are processed within 24-48 hours</li>
-                            <li>You can only withdraw to your registered wallet addresses</li>
-                            <li>Double-check your wallet address before submitting</li>
-                            <li>All withdrawals require admin approval for security</li>
-                            <li>Contact support if you have any issues</li>
-                        </ul>
+                <div class="ml-4">
+                    <h3 class="text-lg font-medium text-yellow-400 mb-3">Important Withdrawal Information</h3>
+                    <div class="text-gray-300 space-y-2">
+                        <div class="flex items-center">
+                            <i class="fas fa-check text-green-400 mr-2"></i>
+                            <span>Withdrawals are processed within 24-48 hours</span>
+                        </div>
+                        <div class="flex items-center">
+                            <i class="fas fa-check text-green-400 mr-2"></i>
+                            <span>You can only withdraw to your registered wallet addresses</span>
+                        </div>
+                        <div class="flex items-center">
+                            <i class="fas fa-check text-green-400 mr-2"></i>
+                            <span>Double-check your wallet address before submitting</span>
+                        </div>
+                        <div class="flex items-center">
+                            <i class="fas fa-check text-green-400 mr-2"></i>
+                            <span>All withdrawals require admin approval for security</span>
+                        </div>
+                        <div class="flex items-center">
+                            <i class="fas fa-info text-blue-400 mr-2"></i>
+                            <span>Contact support if you have any issues with withdrawals</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -172,8 +218,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const fee = 0; // No fee for now
         const netAmount = amount - fee;
         
-        withdrawalAmountSpan.textContent = `$${amount.toFixed(2)}`;
-        netAmountSpan.textContent = `$${netAmount.toFixed(2)}`;
+        withdrawalAmountSpan.textContent = `$${amount.toLocaleString()}`;
+        netAmountSpan.textContent = `$${netAmount.toLocaleString()}`;
     }
     
     if (amountInput) {

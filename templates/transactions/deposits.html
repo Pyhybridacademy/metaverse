@@ -1,90 +1,176 @@
 {% extends 'base.html' %}
+{% load math_filters %}
 
 {% block title %}My Deposits - {{ site_settings.site_name|default:"Investment Platform" }}{% endblock %}
 
 {% block page_title %}My Deposits{% endblock %}
 
 {% block content %}
-<div class="pt-16 p-6">
+<div class="pt-16 p-6 animate-fade-in">
     <div class="max-w-6xl mx-auto">
         <!-- Page Header -->
-        <div class="flex justify-between items-center mb-8">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
             <div>
-                <h1 class="text-2xl font-bold text-gray-900">My Deposits</h1>
-                <p class="text-gray-600">Track all your deposit transactions</p>
+                <h1 class="text-3xl font-bold text-white mb-2">My Deposits 💰</h1>
+                <p class="text-gray-300">Track all your deposit transactions and funding history</p>
             </div>
-            <a href="{% url 'transactions:new_deposit' %}" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700">
+            <a href="{% url 'transactions:new_deposit' %}" class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white font-medium rounded-lg hover:from-green-600 hover:to-emerald-700 transition-all duration-200 card-hover">
                 <i class="fas fa-plus mr-2"></i>New Deposit
             </a>
         </div>
         
+        <!-- Deposit Stats -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="glass-effect rounded-xl p-6 border border-green-400 border-opacity-30 card-hover">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-300 mb-1">Total Deposits</p>
+                        <p class="text-3xl font-bold text-white">{{ user.profile.total_deposit|currency }}</p>
+                        <div class="flex items-center mt-2">
+                            <i class="fas fa-arrow-up text-green-400 text-sm mr-1"></i>
+                            <span class="text-green-400 text-sm">+12.5% this month</span>
+                        </div>
+                    </div>
+                    <div class="p-4 bg-green-400 bg-opacity-20 rounded-xl">
+                        <i class="fas fa-arrow-down text-green-400 text-2xl"></i>
+                    </div>
+                </div>
+                <div class="mt-4 h-2 bg-gray-700 rounded-full overflow-hidden">
+                    <div class="progress-bar h-full rounded-full" style="width: 85%"></div>
+                </div>
+            </div>
+            
+            <div class="glass-effect rounded-xl p-6 border border-yellow-400 border-opacity-30 card-hover">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-300 mb-1">Pending Deposits</p>
+                        <p class="text-3xl font-bold text-white">{{ pending_deposits_count|default:"0" }}</p>
+                        <div class="flex items-center mt-2">
+                            <i class="fas fa-clock text-yellow-400 text-sm mr-1"></i>
+                            <span class="text-yellow-400 text-sm">Awaiting approval</span>
+                        </div>
+                    </div>
+                    <div class="p-4 bg-yellow-400 bg-opacity-20 rounded-xl">
+                        <i class="fas fa-clock text-yellow-400 text-2xl"></i>
+                    </div>
+                </div>
+                <div class="mt-4 h-2 bg-gray-700 rounded-full overflow-hidden">
+                    <div class="progress-bar h-full rounded-full" style="width: 45%"></div>
+                </div>
+            </div>
+            
+            <div class="glass-effect rounded-xl p-6 border border-blue-400 border-opacity-30 card-hover">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-300 mb-1">Last Deposit</p>
+                        <p class="text-3xl font-bold text-white">
+                            {% if deposits.first %}
+                                {{ deposits.first.amount|currency }}
+                            {% else %}
+                                $0.00
+                            {% endif %}
+                        </p>
+                        <div class="flex items-center mt-2">
+                            <i class="fas fa-calendar text-blue-400 text-sm mr-1"></i>
+                            <span class="text-blue-400 text-sm">
+                                {% if deposits.first %}
+                                    {{ deposits.first.created_at|date:"M d" }}
+                                {% else %}
+                                    No deposits yet
+                                {% endif %}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="p-4 bg-blue-400 bg-opacity-20 rounded-xl">
+                        <i class="fas fa-history text-blue-400 text-2xl"></i>
+                    </div>
+                </div>
+                <div class="mt-4 h-2 bg-gray-700 rounded-full overflow-hidden">
+                    <div class="progress-bar h-full rounded-full" style="width: 60%"></div>
+                </div>
+            </div>
+        </div>
+        
         <!-- Deposits Table -->
-        <div class="bg-white rounded-lg shadow overflow-hidden">
+        <div class="glass-effect rounded-xl border border-purple-primary border-opacity-30 overflow-hidden">
+            <div class="p-6 border-b border-gray-600 border-opacity-30">
+                <h2 class="text-xl font-semibold text-white flex items-center">
+                    <i class="fas fa-list mr-2 text-purple-primary"></i>
+                    Deposit History
+                </h2>
+            </div>
+            
             {% if deposits %}
                 <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
+                    <table class="min-w-full">
+                        <thead class="bg-gray-800 bg-opacity-50">
                             <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payment Method</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Transaction ID</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Date & Time</th>
+                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Amount</th>
+                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Payment Method</th>
+                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Transaction ID</th>
+                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Status</th>
+                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Actions</th>
                             </tr>
                         </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
+                        <tbody class="divide-y divide-gray-600 divide-opacity-30">
                             {% for deposit in deposits %}
-                                <tr>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                        {{ deposit.created_at|date:"M d, Y H:i" }}
+                                <tr class="hover:bg-gray-700 hover:bg-opacity-30 transition-colors">
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm text-white font-medium">{{ deposit.created_at|date:"M d, Y" }}</div>
+                                        <div class="text-xs text-gray-400">{{ deposit.created_at|time:"H:i" }}</div>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="text-sm font-medium text-gray-900">${{ deposit.amount|floatformat:2 }}</div>
+                                        <div class="text-lg font-bold text-white">${{ deposit.amount|floatformat:2 }}</div>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <div class="flex items-center">
-                                            {% if deposit.payment_method == 'BTC' %}
-                                                <i class="fab fa-bitcoin text-orange-500 mr-2"></i>
-                                            {% elif deposit.payment_method == 'USDT' %}
-                                                <i class="fas fa-dollar-sign text-green-500 mr-2"></i>
-                                            {% elif deposit.payment_method == 'ETH' %}
-                                                <i class="fab fa-ethereum text-blue-500 mr-2"></i>
-                                            {% else %}
-                                                <i class="fas fa-university text-gray-500 mr-2"></i>
-                                            {% endif %}
-                                            <span class="text-sm text-gray-900">{{ deposit.get_payment_method_display }}</span>
+                                            <div class="p-2 rounded-lg mr-3
+                                                {% if deposit.payment_method == 'BTC' %}bg-orange-400 bg-opacity-20{% endif %}
+                                                {% if deposit.payment_method == 'USDT' %}bg-green-400 bg-opacity-20{% endif %}
+                                                {% if deposit.payment_method == 'ETH' %}bg-blue-400 bg-opacity-20{% endif %}">
+                                                {% if deposit.payment_method == 'BTC' %}
+                                                    <i class="fab fa-bitcoin text-orange-400"></i>
+                                                {% elif deposit.payment_method == 'USDT' %}
+                                                    <i class="fas fa-dollar-sign text-green-400"></i>
+                                                {% elif deposit.payment_method == 'ETH' %}
+                                                    <i class="fab fa-ethereum text-blue-400"></i>
+                                                {% else %}
+                                                    <i class="fas fa-university text-gray-400"></i>
+                                                {% endif %}
+                                            </div>
+                                            <span class="text-sm text-white font-medium">{{ deposit.get_payment_method_display }}</span>
                                         </div>
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-mono">
+                                    <td class="px-6 py-4 whitespace-nowrap">
                                         {% if deposit.transaction_id %}
-                                            {{ deposit.transaction_id|truncatechars:20 }}
+                                            <span class="text-sm text-gray-300 font-mono">{{ deposit.transaction_id|truncatechars:20 }}</span>
                                         {% else %}
-                                            <span class="text-gray-400">-</span>
+                                            <span class="text-gray-500">-</span>
                                         {% endif %}
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         {% if deposit.status == 'pending' %}
-                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                            <span class="inline-flex items-center px-3 py-1 bg-yellow-400 bg-opacity-20 text-yellow-400 text-xs rounded-full border border-yellow-400 border-opacity-30">
                                                 <i class="fas fa-clock mr-1"></i>Pending
                                             </span>
                                         {% elif deposit.status == 'approved' %}
-                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                            <span class="inline-flex items-center px-3 py-1 bg-green-400 bg-opacity-20 text-green-400 text-xs rounded-full border border-green-400 border-opacity-30">
                                                 <i class="fas fa-check mr-1"></i>Approved
                                             </span>
                                         {% elif deposit.status == 'rejected' %}
-                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                            <span class="inline-flex items-center px-3 py-1 bg-red-400 bg-opacity-20 text-red-400 text-xs rounded-full border border-red-400 border-opacity-30">
                                                 <i class="fas fa-times mr-1"></i>Rejected
                                             </span>
                                         {% endif %}
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                         {% if deposit.proof_of_payment %}
-                                            <a href="{{ deposit.proof_of_payment.url }}" target="_blank" class="text-blue-600 hover:text-blue-900">
+                                            <a href="{{ deposit.proof_of_payment.url }}" target="_blank" class="text-purple-400 hover:text-purple-300 transition-colors">
                                                 <i class="fas fa-eye mr-1"></i>View Proof
                                             </a>
                                         {% else %}
-                                            <span class="text-gray-400">No proof</span>
+                                            <span class="text-gray-500">No proof</span>
                                         {% endif %}
                                     </td>
                                 </tr>
@@ -93,11 +179,11 @@
                     </table>
                 </div>
             {% else %}
-                <div class="text-center py-12">
-                    <i class="fas fa-plus-circle text-gray-400 text-4xl mb-4"></i>
-                    <h3 class="text-lg font-medium text-gray-900 mb-2">No deposits yet</h3>
-                    <p class="text-gray-500 mb-6">Start by making your first deposit to begin investing</p>
-                    <a href="{% url 'transactions:new_deposit' %}" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700">
+                <div class="text-center py-16">
+                    <i class="fas fa-plus-circle text-gray-400 text-6xl mb-6"></i>
+                    <h3 class="text-2xl font-medium text-white mb-4">No deposits yet</h3>
+                    <p class="text-gray-400 mb-8 max-w-md mx-auto">Start by making your first deposit to begin investing and growing your portfolio!</p>
+                    <a href="{% url 'transactions:new_deposit' %}" class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white font-medium rounded-lg hover:from-green-600 hover:to-emerald-700 transition-all duration-200">
                         <i class="fas fa-plus mr-2"></i>Make First Deposit
                     </a>
                 </div>
@@ -105,25 +191,52 @@
         </div>
         
         <!-- Deposit Instructions -->
-        <div class="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-6">
-            <div class="flex">
+        <div class="mt-8 glass-effect rounded-xl border border-blue-400 border-opacity-30 p-6">
+            <div class="flex items-start">
                 <div class="flex-shrink-0">
-                    <i class="fas fa-info-circle text-blue-600"></i>
+                    <i class="fas fa-info-circle text-blue-400 text-2xl"></i>
                 </div>
-                <div class="ml-3">
-                    <h3 class="text-sm font-medium text-blue-800">Deposit Instructions</h3>
-                    <div class="mt-2 text-sm text-blue-700">
-                        <ol class="list-decimal list-inside space-y-1">
-                            <li>Click "New Deposit" to start a deposit request</li>
-                            <li>Choose your payment method and enter the amount</li>
-                            <li>Send the funds to the provided wallet address</li>
-                            <li>Upload proof of payment (screenshot or transaction hash)</li>
-                            <li>Wait for admin approval (usually within 24 hours)</li>
-                        </ol>
+                <div class="ml-4">
+                    <h3 class="text-lg font-medium text-blue-400 mb-3">How to Make a Deposit</h3>
+                    <div class="text-gray-300 space-y-2">
+                        <div class="flex items-center">
+                            <span class="inline-flex items-center justify-center w-6 h-6 bg-blue-400 bg-opacity-20 text-blue-400 text-xs font-bold rounded-full mr-3">1</span>
+                            <span>Click "New Deposit" to start a deposit request</span>
+                        </div>
+                        <div class="flex items-center">
+                            <span class="inline-flex items-center justify-center w-6 h-6 bg-blue-400 bg-opacity-20 text-blue-400 text-xs font-bold rounded-full mr-3">2</span>
+                            <span>Choose your payment method and enter the amount</span>
+                        </div>
+                        <div class="flex items-center">
+                            <span class="inline-flex items-center justify-center w-6 h-6 bg-blue-400 bg-opacity-20 text-blue-400 text-xs font-bold rounded-full mr-3">3</span>
+                            <span>Send the funds to the provided wallet address</span>
+                        </div>
+                        <div class="flex items-center">
+                            <span class="inline-flex items-center justify-center w-6 h-6 bg-blue-400 bg-opacity-20 text-blue-400 text-xs font-bold rounded-full mr-3">4</span>
+                            <span>Upload proof of payment (screenshot or transaction hash)</span>
+                        </div>
+                        <div class="flex items-center">
+                            <span class="inline-flex items-center justify-center w-6 h-6 bg-blue-400 bg-opacity-20 text-blue-400 text-xs font-bold rounded-full mr-3">5</span>
+                            <span>Wait for admin approval (usually within 24 hours)</span>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+// Animate progress bars on load
+document.addEventListener('DOMContentLoaded', function() {
+    const progressBars = document.querySelectorAll('.progress-bar');
+    progressBars.forEach((bar, index) => {
+        const width = bar.style.width;
+        bar.style.width = '0%';
+        setTimeout(() => {
+            bar.style.width = width;
+        }, 500 + (index * 100));
+    });
+});
+</script>
 {% endblock %}

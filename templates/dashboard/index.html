@@ -1,199 +1,175 @@
 {% extends 'base.html' %}
+{% load math_filters %}
 
 {% block title %}Dashboard - {{ site_settings.site_name|default:"Investment Platform" }}{% endblock %}
 
 {% block page_title %}Dashboard{% endblock %}
 
 {% block content %}
-<div class="pt-16 p-6">
+<div class="pt-16 p-6 animate-fade-in">
     <!-- Welcome Section -->
     <div class="mb-8">
-        <h1 class="text-2xl font-bold text-gray-900">Welcome back, {{ user.full_name|default:user.username }}!</h1>
-        <p class="text-gray-600">Here's an overview of your investment portfolio</p>
+        <h1 class="text-3xl font-bold text-white mb-2">Welcome back, {{ user.full_name|default:user.username }}! 👋</h1>
+        <p class="text-gray-300">Here's an overview of your investment portfolio</p>
     </div>
     
-    <!-- Stats Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <div class="bg-white rounded-lg shadow p-6">
-            <div class="flex items-center">
-                <div class="p-2 bg-green-100 rounded-lg">
-                    <i class="fas fa-wallet text-green-600"></i>
-                </div>
-                <div class="ml-4">
-                    <p class="text-sm font-medium text-gray-600">Account Balance</p>
-                    <p class="text-2xl font-bold text-gray-900">${{ profile.account_balance|floatformat:2 }}</p>
-                </div>
-            </div>
-        </div>
-        
-        <div class="bg-white rounded-lg shadow p-6">
-            <div class="flex items-center">
-                <div class="p-2 bg-blue-100 rounded-lg">
-                    <i class="fas fa-arrow-down text-blue-600"></i>
-                </div>
-                <div class="ml-4">
-                    <p class="text-sm font-medium text-gray-600">Total Deposits</p>
-                    <p class="text-2xl font-bold text-gray-900">${{ profile.total_deposit|floatformat:2 }}</p>
-                </div>
-            </div>
-        </div>
-        
-        <div class="bg-white rounded-lg shadow p-6">
-            <div class="flex items-center">
-                <div class="p-2 bg-purple-100 rounded-lg">
-                    <i class="fas fa-chart-pie text-purple-600"></i>
-                </div>
-                <div class="ml-4">
-                    <p class="text-sm font-medium text-gray-600">Current Investment</p>
-                    <p class="text-2xl font-bold text-gray-900">${{ profile.current_investment|floatformat:2 }}</p>
-                </div>
-            </div>
-        </div>
-        
-        <div class="bg-white rounded-lg shadow p-6">
-            <div class="flex items-center">
-                <div class="p-2 bg-yellow-100 rounded-lg">
-                    <i class="fas fa-gift text-yellow-600"></i>
-                </div>
-                <div class="ml-4">
-                    <p class="text-sm font-medium text-gray-600">Total Bonus</p>
-                    <p class="text-2xl font-bold text-gray-900">${{ profile.total_bonus|floatformat:2 }}</p>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Quick Actions -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <a href="{% url 'transactions:new_deposit' %}" class="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow">
-            <div class="flex items-center justify-between">
-                <div>
-                    <h3 class="text-lg font-semibold text-gray-900">Make Deposit</h3>
-                    <p class="text-gray-600">Add funds to your account</p>
-                </div>
-                <div class="p-3 bg-green-100 rounded-lg">
-                    <i class="fas fa-plus text-green-600 text-xl"></i>
-                </div>
-            </div>
-        </a>
-        
-        <a href="{% url 'transactions:new_investment' %}" class="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow">
-            <div class="flex items-center justify-between">
-                <div>
-                    <h3 class="text-lg font-semibold text-gray-900">New Investment</h3>
-                    <p class="text-gray-600">Start earning returns</p>
-                </div>
-                <div class="p-3 bg-blue-100 rounded-lg">
-                    <i class="fas fa-chart-line text-blue-600 text-xl"></i>
-                </div>
-            </div>
-        </a>
-        
-        <a href="{% url 'transactions:new_withdrawal' %}" class="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow">
-            <div class="flex items-center justify-between">
-                <div>
-                    <h3 class="text-lg font-semibold text-gray-900">Withdraw Funds</h3>
-                    <p class="text-gray-600">Transfer to your wallet</p>
-                </div>
-                <div class="p-3 bg-red-100 rounded-lg">
-                    <i class="fas fa-arrow-up text-red-600 text-xl"></i>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Recent Activity & Active Investments -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <!-- Recent Transactions -->
-        <div class="bg-white rounded-lg shadow">
-            <div class="p-6 border-b border-gray-200">
-                <h3 class="text-lg font-semibold text-gray-900">Recent Transactions</h3>
-            </div>
-            <div class="p-6">
-                {% if recent_transactions %}
-                    <div class="space-y-4">
-                        {% for transaction in recent_transactions %}
-                            <div class="flex items-center justify-between">
-                                <div class="flex items-center">
-                                    <div class="p-2 rounded-lg
-                                        {% if transaction.transaction_type == 'deposit' %}bg-green-100{% endif %}
-                                        {% if transaction.transaction_type == 'withdrawal' %}bg-red-100{% endif %}
-                                        {% if transaction.transaction_type == 'investment' %}bg-blue-100{% endif %}
-                                        {% if transaction.transaction_type == 'roi' %}bg-purple-100{% endif %}
-                                        {% if transaction.transaction_type == 'bonus' %}bg-yellow-100{% endif %}">
-                                        <i class="fas 
-                                            {% if transaction.transaction_type == 'deposit' %}fa-arrow-down text-green-600{% endif %}
-                                            {% if transaction.transaction_type == 'withdrawal' %}fa-arrow-up text-red-600{% endif %}
-                                            {% if transaction.transaction_type == 'investment' %}fa-chart-pie text-blue-600{% endif %}
-                                            {% if transaction.transaction_type == 'roi' %}fa-coins text-purple-600{% endif %}
-                                            {% if transaction.transaction_type == 'bonus' %}fa-gift text-yellow-600{% endif %}"></i>
-                                    </div>
-                                    <div class="ml-3">
-                                        <p class="text-sm font-medium text-gray-900">{{ transaction.description }}</p>
-                                        <p class="text-xs text-gray-500">{{ transaction.created_at|date:"M d, Y H:i" }}</p>
-                                    </div>
-                                </div>
-                                <div class="text-right">
-                                    <p class="text-sm font-medium 
-                                        {% if transaction.amount > 0 %}text-green-600{% else %}text-red-600{% endif %}">
-                                        {% if transaction.amount > 0 %}+{% endif %} ${{ transaction.amount|floatformat:2 }}
-                                    </p>
-                                </div>
-                            </div>
-                        {% endfor %}
+    <!-- 1. BALANCE SECTION (First) -->
+    <div class="mb-8">
+        <h2 class="text-2xl font-semibold text-white mb-6 flex items-center">
+            <i class="fas fa-wallet mr-3 text-purple-primary"></i>
+            Account Overview
+        </h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div class="glass-effect rounded-xl p-6 border border-green-400 border-opacity-30 card-hover">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-300 mb-1">Account Balance</p>
+                        <p class="text-3xl font-bold text-white">{{ profile.account_balance|currency }}</p>
+                        <div class="flex items-center mt-2">
+                            <i class="fas fa-arrow-up text-green-400 text-sm mr-1"></i>
+                            <span class="text-green-400 text-sm">+12.5%</span>
+                        </div>
                     </div>
-                    <div class="mt-4">
-                        <a href="{% url 'transactions:history' %}" class="text-blue-600 hover:text-blue-500 text-sm font-medium">
-                            View all transactions →
-                        </a>
+                    <div class="p-3 bg-green-400 bg-opacity-20 rounded-xl">
+                        <i class="fas fa-wallet text-green-400 text-2xl"></i>
                     </div>
-                {% else %}
-                    <p class="text-gray-500 text-center py-8">No transactions yet</p>
-                {% endif %}
+                </div>
+                <div class="mt-4 h-2 bg-gray-700 rounded-full overflow-hidden">
+                    <div class="progress-bar h-full rounded-full" style="width: 85%"></div>
+                </div>
+            </div>
+            
+            <div class="glass-effect rounded-xl p-6 border border-blue-400 border-opacity-30 card-hover">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-300 mb-1">Total Deposits</p>
+                        <p class="text-3xl font-bold text-white">{{ profile.total_deposit|currency }}</p>
+                        <div class="flex items-center mt-2">
+                            <i class="fas fa-arrow-up text-blue-400 text-sm mr-1"></i>
+                            <span class="text-blue-400 text-sm">+8.2%</span>
+                        </div>
+                    </div>
+                    <div class="p-3 bg-blue-400 bg-opacity-20 rounded-xl">
+                        <i class="fas fa-arrow-down text-blue-400 text-2xl"></i>
+                    </div>
+                </div>
+                <div class="mt-4 h-2 bg-gray-700 rounded-full overflow-hidden">
+                    <div class="progress-bar h-full rounded-full" style="width: 70%"></div>
+                </div>
+            </div>
+            
+            <div class="glass-effect rounded-xl p-6 border border-purple-400 border-opacity-30 card-hover">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-300 mb-1">Current Investment</p>
+                        <p class="text-3xl font-bold text-white">{{ profile.current_investment|currency }}</p>
+                        <div class="flex items-center mt-2">
+                            <i class="fas fa-arrow-up text-purple-400 text-sm mr-1"></i>
+                            <span class="text-purple-400 text-sm">+15.7%</span>
+                        </div>
+                    </div>
+                    <div class="p-3 bg-purple-400 bg-opacity-20 rounded-xl">
+                        <i class="fas fa-chart-pie text-purple-400 text-2xl"></i>
+                    </div>
+                </div>
+                <div class="mt-4 h-2 bg-gray-700 rounded-full overflow-hidden">
+                    <div class="progress-bar h-full rounded-full" style="width: 92%"></div>
+                </div>
+            </div>
+            
+            <div class="glass-effect rounded-xl p-6 border border-yellow-400 border-opacity-30 card-hover">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-300 mb-1">Total Bonus</p>
+                        <p class="text-3xl font-bold text-white">{{ profile.total_bonus|currency }}</p>
+                        <div class="flex items-center mt-2">
+                            <i class="fas fa-arrow-up text-yellow-400 text-sm mr-1"></i>
+                            <span class="text-yellow-400 text-sm">+5.3%</span>
+                        </div>
+                    </div>
+                    <div class="p-3 bg-yellow-400 bg-opacity-20 rounded-xl">
+                        <i class="fas fa-gift text-yellow-400 text-2xl"></i>
+                    </div>
+                </div>
+                <div class="mt-4 h-2 bg-gray-700 rounded-full overflow-hidden">
+                    <div class="progress-bar h-full rounded-full" style="width: 45%"></div>
+                </div>
             </div>
         </div>
+    </div>
+
+    <!-- 2. INVESTMENT SECTION (Second) -->
+    <div class="mb-8">
+        <h2 class="text-2xl font-semibold text-white mb-6 flex items-center">
+            <i class="fas fa-chart-line mr-3 text-purple-primary"></i>
+            Investment Portfolio
+        </h2>
         
         <!-- Active Investments -->
-        <div class="bg-white rounded-lg shadow">
-            <div class="p-6 border-b border-gray-200">
-                <h3 class="text-lg font-semibold text-gray-900">Active Investments</h3>
+        <div class="glass-effect rounded-xl border border-purple-primary border-opacity-30 mb-6">
+            <div class="p-6 border-b border-gray-600 border-opacity-30">
+                <h3 class="text-xl font-semibold text-white flex items-center">
+                    <i class="fas fa-chart-pie mr-2 text-purple-primary"></i>
+                    Active Investments
+                </h3>
             </div>
             <div class="p-6">
                 {% if active_investments %}
-                    <div class="space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {% for investment in active_investments %}
-                            <div class="border border-gray-200 rounded-lg p-4">
-                                <div class="flex justify-between items-start mb-2">
-                                    <h4 class="font-medium text-gray-900">{{ investment.plan.name }}</h4>
-                                    <span class="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">Active</span>
-                                </div>
-                                <div class="grid grid-cols-2 gap-4 text-sm">
+                            <div class="glass-effect border border-gray-600 border-opacity-30 rounded-lg p-6">
+                                <div class="flex justify-between items-start mb-4">
                                     <div>
-                                        <p class="text-gray-600">Amount</p>
-                                        <p class="font-medium">${{ investment.amount|floatformat:2 }}</p>
+                                        <h4 class="font-semibold text-white text-lg">{{ investment.plan.name }}</h4>
+                                        <p class="text-gray-400 text-sm">Investment Plan</p>
+                                    </div>
+                                    <span class="px-3 py-1 bg-green-400 bg-opacity-20 text-green-400 text-xs rounded-full border border-green-400 border-opacity-30">
+                                        Active
+                                    </span>
+                                </div>
+                                
+                                <div class="grid grid-cols-2 gap-4 mb-4">
+                                    <div>
+                                        <p class="text-gray-400 text-sm">Amount Invested</p>
+                                        <p class="font-bold text-white text-xl">{{ investment.amount|currency }}</p>
                                     </div>
                                     <div>
-                                        <p class="text-gray-600">Expected Return</p>
-                                        <p class="font-medium text-green-600">${{ investment.expected_return|floatformat:2 }}</p>
+                                        <p class="text-gray-400 text-sm">Expected Return</p>
+                                        <p class="font-bold text-green-400 text-xl">{{ investment.expected_return|currency }}</p>
                                     </div>
                                 </div>
-                                <div class="mt-2 text-xs text-gray-500">
-                                    Started: {{ investment.start_date|date:"M d, Y" }} | 
-                                    Ends: {{ investment.end_date|date:"M d, Y" }}
+                                
+                                <!-- Investment Progress -->
+                                <div class="mb-4">
+                                    <div class="flex justify-between text-sm mb-2">
+                                        <span class="text-gray-400">Investment Progress</span>
+                                        <span class="text-white font-medium">65%</span>
+                                    </div>
+                                    <div class="h-3 bg-gray-700 rounded-full overflow-hidden">
+                                        <div class="progress-bar h-full rounded-full" style="width: 65%"></div>
+                                    </div>
+                                    <div class="flex justify-between text-xs text-gray-400 mt-1">
+                                        <span>Started: {{ investment.start_date|date:"M d, Y" }}</span>
+                                        <span>Ends: {{ investment.end_date|date:"M d, Y" }}</span>
+                                    </div>
+                                </div>
+                                
+                                <!-- ROI Progress -->
+                                <div class="bg-gray-800 bg-opacity-50 rounded-lg p-3">
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-gray-400 text-sm">Current ROI</span>
+                                        <span class="text-purple-400 font-medium">+{{ investment.amount|mul:0.15|currency }}</span>
+                                    </div>
                                 </div>
                             </div>
                         {% endfor %}
                     </div>
-                    <div class="mt-4">
-                        <a href="{% url 'transactions:investments' %}" class="text-blue-600 hover:text-blue-500 text-sm font-medium">
-                            View all investments →
-                        </a>
-                    </div>
                 {% else %}
-                    <div class="text-center py-8">
-                        <i class="fas fa-chart-pie text-gray-400 text-3xl mb-4"></i>
-                        <p class="text-gray-500 mb-4">No active investments</p>
-                        <a href="{% url 'transactions:new_investment' %}" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700">
+                    <div class="text-center py-12">
+                        <i class="fas fa-chart-pie text-gray-400 text-5xl mb-4"></i>
+                        <h3 class="text-xl font-medium text-white mb-2">No active investments</h3>
+                        <p class="text-gray-400 mb-6">Start investing to earn returns and grow your portfolio!</p>
+                        <a href="{% url 'transactions:new_investment' %}" class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-purple-primary to-purple-secondary text-white font-medium rounded-lg hover:from-purple-secondary hover:to-purple-accent transition-all duration-200">
                             <i class="fas fa-plus mr-2"></i>
                             Start Investing
                         </a>
@@ -201,28 +177,252 @@
                 {% endif %}
             </div>
         </div>
+        
+        <!-- Quick Investment Actions -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <a href="{% url 'transactions:new_deposit' %}" class="glass-effect rounded-xl p-6 border border-green-400 border-opacity-30 card-hover group">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-xl font-semibold text-white mb-2 group-hover:text-green-400 transition-colors">Make Deposit</h3>
+                        <p class="text-gray-300">Add funds to your account</p>
+                    </div>
+                    <div class="p-4 bg-green-400 bg-opacity-20 rounded-xl group-hover:bg-opacity-30 transition-all">
+                        <i class="fas fa-plus text-green-400 text-2xl group-hover:scale-110 transition-transform"></i>
+                    </div>
+                </div>
+            </a>
+            
+            <a href="{% url 'transactions:new_investment' %}" class="glass-effect rounded-xl p-6 border border-purple-400 border-opacity-30 card-hover group">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-xl font-semibold text-white mb-2 group-hover:text-purple-400 transition-colors">New Investment</h3>
+                        <p class="text-gray-300">Start earning returns</p>
+                    </div>
+                    <div class="p-4 bg-purple-400 bg-opacity-20 rounded-xl group-hover:bg-opacity-30 transition-all">
+                        <i class="fas fa-chart-line text-purple-400 text-2xl group-hover:scale-110 transition-transform"></i>
+                    </div>
+                </div>
+            </a>
+            
+            <a href="{% url 'transactions:new_withdrawal' %}" class="glass-effect rounded-xl p-6 border border-red-400 border-opacity-30 card-hover group">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-xl font-semibold text-white mb-2 group-hover:text-red-400 transition-colors">Withdraw Funds</h3>
+                        <p class="text-gray-300">Transfer to your wallet</p>
+                    </div>
+                    <div class="p-4 bg-red-400 bg-opacity-20 rounded-xl group-hover:bg-opacity-30 transition-all">
+                        <i class="fas fa-arrow-up text-red-400 text-2xl group-hover:scale-110 transition-transform"></i>
+                    </div>
+                </div>
+            </a>
+        </div>
+    </div>
+    
+    <!-- 3. CRYPTO RATES SECTION (Third) -->
+    <div class="mb-8">
+        <h2 class="text-2xl font-semibold text-white mb-6 flex items-center">
+            <i class="fas fa-coins mr-3 text-purple-primary"></i>
+            Market Overview
+        </h2>
+        <div class="glass-effect rounded-xl p-6 border border-purple-primary border-opacity-30">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="glass-effect p-6 rounded-lg border border-orange-400 border-opacity-30 card-hover">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center">
+                            <i class="fab fa-bitcoin text-orange-400 text-2xl mr-3"></i>
+                            <div>
+                                <span class="text-white font-medium">Bitcoin</span>
+                                <p class="text-gray-400 text-sm">BTC</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-xl font-bold text-orange-400">${{ currency_rates.BTC|default:"45000"|floatformat:0 }}</div>
+                            <div class="text-green-400 text-sm flex items-center">
+                                <i class="fas fa-arrow-up mr-1"></i>+2.5%
+                            </div>
+                        </div>
+                    </div>
+                    <!-- BTC Rate Progress -->
+                    <div class="mb-2">
+                        <div class="flex justify-between text-xs text-gray-400 mb-1">
+                            <span>24h Range</span>
+                            <span>$44,200 - $45,800</span>
+                        </div>
+                        <div class="h-2 bg-gray-700 rounded-full overflow-hidden">
+                            <div class="h-full bg-gradient-to-r from-orange-600 to-orange-400 rounded-full" style="width: 75%"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="glass-effect p-6 rounded-lg border border-blue-400 border-opacity-30 card-hover">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center">
+                            <i class="fab fa-ethereum text-blue-400 text-2xl mr-3"></i>
+                            <div>
+                                <span class="text-white font-medium">Ethereum</span>
+                                <p class="text-gray-400 text-sm">ETH</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-xl font-bold text-blue-400">${{ currency_rates.ETH|default:"3200"|floatformat:0 }}</div>
+                            <div class="text-green-400 text-sm flex items-center">
+                                <i class="fas fa-arrow-up mr-1"></i>+1.8%
+                            </div>
+                        </div>
+                    </div>
+                    <!-- ETH Rate Progress -->
+                    <div class="mb-2">
+                        <div class="flex justify-between text-xs text-gray-400 mb-1">
+                            <span>24h Range</span>
+                            <span>$3,150 - $3,280</span>
+                        </div>
+                        <div class="h-2 bg-gray-700 rounded-full overflow-hidden">
+                            <div class="h-full bg-gradient-to-r from-blue-600 to-blue-400 rounded-full" style="width: 60%"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="glass-effect p-6 rounded-lg border border-green-400 border-opacity-30 card-hover">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center">
+                            <i class="fas fa-dollar-sign text-green-400 text-2xl mr-3"></i>
+                            <div>
+                                <span class="text-white font-medium">Tether</span>
+                                <p class="text-gray-400 text-sm">USDT</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-xl font-bold text-green-400">${{ currency_rates.USDT|default:"1.00"|floatformat:3 }}</div>
+                            <div class="text-gray-400 text-sm flex items-center">
+                                <i class="fas fa-minus mr-1"></i>0.0%
+                            </div>
+                        </div>
+                    </div>
+                    <!-- USDT Rate Progress -->
+                    <div class="mb-2">
+                        <div class="flex justify-between text-xs text-gray-400 mb-1">
+                            <span>24h Range</span>
+                            <span>$0.998 - $1.002</span>
+                        </div>
+                        <div class="h-2 bg-gray-700 rounded-full overflow-hidden">
+                            <div class="h-full bg-gradient-to-r from-green-600 to-green-400 rounded-full" style="width: 50%"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="glass-effect p-6 rounded-lg border border-gray-400 border-opacity-30 card-hover">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center">
+                            <i class="fas fa-coins text-gray-400 text-2xl mr-3"></i>
+                            <div>
+                                <span class="text-white font-medium">Litecoin</span>
+                                <p class="text-gray-400 text-sm">LTC</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-xl font-bold text-gray-400">$180</div>
+                            <div class="text-red-400 text-sm flex items-center">
+                                <i class="fas fa-arrow-down mr-1"></i>-0.5%
+                            </div>
+                        </div>
+                    </div>
+                    <!-- LTC Rate Progress -->
+                    <div class="mb-2">
+                        <div class="flex justify-between text-xs text-gray-400 mb-1">
+                            <span>24h Range</span>
+                            <span>$178 - $185</span>
+                        </div>
+                        <div class="h-2 bg-gray-700 rounded-full overflow-hidden">
+                            <div class="h-full bg-gradient-to-r from-gray-600 to-gray-400 rounded-full" style="width: 35%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recent Activity -->
+    <div class="mb-8">
+        <h2 class="text-2xl font-semibold text-white mb-6 flex items-center">
+            <i class="fas fa-history mr-3 text-purple-primary"></i>
+            Recent Activity
+        </h2>
+        <div class="glass-effect rounded-xl border border-purple-primary border-opacity-30">
+            <div class="p-6 border-b border-gray-600 border-opacity-30">
+                <h3 class="text-xl font-semibold text-white">Recent Transactions</h3>
+            </div>
+            <div class="p-6">
+                {% if recent_transactions %}
+                    <div class="space-y-4">
+                        {% for transaction in recent_transactions %}
+                            <div class="flex items-center justify-between p-4 glass-effect rounded-lg border border-gray-600 border-opacity-30 hover:border-purple-primary hover:border-opacity-50 transition-all">
+                                <div class="flex items-center">
+                                    <div class="p-3 rounded-lg
+                                        {% if transaction.transaction_type == 'deposit' %}bg-green-400 bg-opacity-20{% endif %}
+                                        {% if transaction.transaction_type == 'withdrawal' %}bg-red-400 bg-opacity-20{% endif %}
+                                        {% if transaction.transaction_type == 'investment' %}bg-blue-400 bg-opacity-20{% endif %}
+                                        {% if transaction.transaction_type == 'roi' %}bg-purple-400 bg-opacity-20{% endif %}
+                                        {% if transaction.transaction_type == 'bonus' %}bg-yellow-400 bg-opacity-20{% endif %}">
+                                        <i class="fas 
+                                            {% if transaction.transaction_type == 'deposit' %}fa-arrow-down text-green-400{% endif %}
+                                            {% if transaction.transaction_type == 'withdrawal' %}fa-arrow-up text-red-400{% endif %}
+                                            {% if transaction.transaction_type == 'investment' %}fa-chart-pie text-blue-400{% endif %}
+                                            {% if transaction.transaction_type == 'roi' %}fa-coins text-purple-400{% endif %}
+                                            {% if transaction.transaction_type == 'bonus' %}fa-gift text-yellow-400{% endif %}"></i>
+                                    </div>
+                                    <div class="ml-4">
+                                        <p class="text-white font-medium">{{ transaction.description }}</p>
+                                        <p class="text-gray-400 text-sm">{{ transaction.created_at|date:"M d, Y H:i" }}</p>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-lg font-bold 
+                                        {% if transaction.amount > 0 %}text-green-400{% else %}text-red-400{% endif %}">
+                                        {% if transaction.amount > 0 %}+{% endif %}{{ transaction.amount|currency }}
+                                    </p>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                    <div class="mt-6 text-center">
+                        <a href="{% url 'transactions:history' %}" class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-purple-primary to-purple-secondary text-white font-medium rounded-lg hover:from-purple-secondary hover:to-purple-accent transition-all duration-200">
+                            View All Transactions
+                            <i class="fas fa-arrow-right ml-2"></i>
+                        </a>
+                    </div>
+                {% else %}
+                    <div class="text-center py-12">
+                        <i class="fas fa-history text-gray-400 text-5xl mb-4"></i>
+                        <p class="text-gray-400 text-lg">No transactions yet</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
     </div>
     
     <!-- Referral Link Section -->
-    <div class="mt-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg shadow p-6 text-white">
-        <div class="flex items-center justify-between">
-            <div>
-                <h3 class="text-lg font-semibold mb-2">Refer Friends & Earn</h3>
-                <p class="text-blue-100">Share your referral link and earn {{ site_settings.referral_bonus_percentage|default:"5" }}% bonus on their first deposit</p>
+    <div class="bg-gradient-to-r from-purple-primary via-purple-secondary to-purple-accent rounded-xl shadow-lg p-6 text-white animate-gradient">
+        <div class="flex flex-col md:flex-row items-center justify-between">
+            <div class="mb-4 md:mb-0">
+                <h3 class="text-2xl font-bold mb-2 flex items-center">
+                    <i class="fas fa-users mr-3"></i>
+                    Refer Friends & Earn
+                </h3>
+                <p class="text-purple-100">Share your referral link and earn {{ site_settings.referral_bonus_percentage|default:"5" }}% bonus on their first deposit</p>
             </div>
-            <div class="text-right">
-                <p class="text-sm text-blue-100">Your Referral Code</p>
-                <p class="text-xl font-bold">{{ profile.referral_code }}</p>
+            <div class="text-center md:text-right">
+                <p class="text-sm text-purple-100">Your Referral Code</p>
+                <p class="text-3xl font-bold">{{ profile.referral_code }}</p>
             </div>
         </div>
-        <div class="mt-4 flex items-center space-x-4">
+        <div class="mt-6 flex flex-col sm:flex-row gap-4">
             <input type="text" 
                    value="{{ request.build_absolute_uri }}{% url 'accounts:register_step1' %}?ref={{ profile.referral_code }}" 
                    id="referral-link" 
-                   class="flex-1 px-3 py-2 bg-white bg-opacity-20 border border-white border-opacity-30 rounded text-white placeholder-blue-200 focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50" 
+                   class="flex-1 px-4 py-3 bg-white bg-opacity-20 border border-white border-opacity-30 rounded-lg text-white placeholder-purple-200 focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50 backdrop-blur-sm" 
                    readonly>
-            <button onclick="copyReferralLink()" class="px-4 py-2 bg-white bg-opacity-20 hover:bg-opacity-30 border border-white border-opacity-30 rounded text-white font-medium transition-colors">
-                <i class="fas fa-copy mr-2"></i>Copy
+            <button onclick="copyReferralLink()" class="px-6 py-3 bg-white bg-opacity-20 hover:bg-opacity-30 border border-white border-opacity-30 rounded-lg text-white font-medium transition-all duration-200 backdrop-blur-sm">
+                <i class="fas fa-copy mr-2"></i>Copy Link
             </button>
         </div>
     </div>
@@ -246,5 +446,17 @@ function copyReferralLink() {
         button.classList.remove('bg-green-500');
     }, 2000);
 }
+
+// Animate progress bars on load
+document.addEventListener('DOMContentLoaded', function() {
+    const progressBars = document.querySelectorAll('.progress-bar');
+    progressBars.forEach((bar, index) => {
+        const width = bar.style.width;
+        bar.style.width = '0%';
+        setTimeout(() => {
+            bar.style.width = width;
+        }, 500 + (index * 100));
+    });
+});
 </script>
 {% endblock %}
